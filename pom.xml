@@ -84,6 +84,13 @@
     <version>2.6.0</version>
   </dependency>
 
+  <!-- https://mvnrepository.com/artifact/io.github.encryptorcode/pluralize -->
+  <dependency>
+    <groupId>io.github.encryptorcode</groupId>
+    <artifactId>pluralize</artifactId>
+    <version>1.0.0</version>
+  </dependency>
+
   <!-- Testing: JUnit 5, AssertJ, Mockito, Spring Test -->
   <dependency>
     <groupId>org.springframework.boot</groupId>
