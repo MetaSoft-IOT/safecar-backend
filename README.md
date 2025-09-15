@@ -1,16 +1,55 @@
-# Getting Started
+<h1>SafeCar Backend Platform</h1>
 
-### Reference Documentation
-For further reference, please consider the following sections:
+## Summary
+<p align="justify">
+SafeCar Backend Platform is part of the SafeCar IoT platform for intelligent vehicle maintenance. It connects drivers with mechanics, collects real-time vehicle data (engine, brakes, tires, consumption, and driving habits), and generates <b>preventive alerts</b> and <b>automatic reports</b> to optimize repairs. This backend is developed with <b>Java 17</b>, <b>Spring Boot Framework</b>, <b>Spring Data JPA</b> on <b>MySQL Database</b>, and includes <b>OpenAPI/Swagger UI</b> documentation.
+</p>
 
-* [Official Apache Maven documentation](https://maven.apache.org/guides/index.html)
-* [Spring Boot Maven Plugin Reference Guide](https://docs.spring.io/spring-boot/3.5.5/maven-plugin)
-* [Create an OCI image](https://docs.spring.io/spring-boot/3.5.5/maven-plugin/build-image.html)
+---
 
-### Maven Parent overrides
+## Features
 
-Due to Maven's design, elements are inherited from the parent POM to the project POM.
-While most of the inheritance is fine, it also inherits unwanted elements like `<license>` and `<developers>` from the parent.
-To prevent this, the project POM contains empty overrides for these elements.
-If you manually switch to a different parent and actually want the inheritance, you need to remove those overrides.
+### 🚀 Features
 
+- RESTful API
+- OpenAPI Documentation (Swagger UI)
+- Spring Boot Framework
+- Spring Data JPA
+- Validation
+- MySQL Database
+- Domain-Driven Design (DDD) approach
+- Environment configuration with `.env`
+
+## Project Setup
+
+### 📦 Requirements
+* Java 17+
+* Maven 3+
+* MySQL 8+
+* IDE (IntelliJ, Eclipse, VSCode)
+
+### 🏁 Running the Project
+
+#### Using Maven Wrapper
+```bash
+./mvnw spring-boot:run
+```
+
+### 🛠️ Environment Configuration
+Create a `.env` file in the project root to configure database credentials:
+
+```env
+# Database Configuration
+DB_USERNAME=your_db_username
+DB_PASSWORD=your_db_password
+```
+
+---
+
+## 📚 API Documentation
+
+The backend provides interactive API documentation using **Swagger UI**. After starting the application, access the documentation at:
+
+```
+http://localhost:8080/swagger-ui.html
+```
