@@ -4,6 +4,7 @@ import java.util.Date;
 
 import org.springframework.data.annotation.CreatedDate;
 import org.springframework.data.annotation.LastModifiedDate;
+import org.springframework.data.jpa.domain.support.AuditingEntityListener;
 
 import lombok.Getter;
 import jakarta.persistence.Column;
@@ -16,7 +17,8 @@ import jakarta.persistence.MappedSuperclass;
  * Provides automatic management of creation and update timestamps.
  */
 @MappedSuperclass
-@EntityListeners(AuditableModel.class)
+// Use Spring Data JPA's AuditingEntityListener to populate audit fields
+@EntityListeners(AuditingEntityListener.class)
 public class AuditableModel {
     /**
      * The timestamp when the entity was created.

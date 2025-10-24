@@ -5,6 +5,7 @@ import java.util.UUID;
 
 import org.springframework.data.annotation.CreatedDate;
 import org.springframework.data.annotation.LastModifiedDate;
+import org.springframework.data.jpa.domain.support.AuditingEntityListener;
 import org.springframework.data.domain.AbstractAggregateRoot;
 
 import lombok.Getter;
@@ -25,7 +26,8 @@ import jakarta.persistence.MappedSuperclass;
  */
 @Getter
 @MappedSuperclass
-@EntityListeners(AuditableAbstractAggregateRoot.class)
+// Use Spring Data JPA's AuditingEntityListener to populate @CreatedDate / @LastModifiedDate
+@EntityListeners(AuditingEntityListener.class)
 public class AuditableAbstractAggregateRoot<T extends AbstractAggregateRoot<T>> extends AbstractAggregateRoot<T> {
      /**
      * The unique identifier for the aggregate root.
