@@ -1,5 +1,6 @@
 package com.safecar.platform.deviceManagement.domain.model.aggregates;
 
+import com.safecar.platform.deviceManagement.domain.model.commands.CreateVehicleCommand;
 import com.safecar.platform.deviceManagement.domain.model.valueobjects.DriverId;
 import com.safecar.platform.shared.domain.model.aggregates.AuditableAbstractAggregateRoot;
 import jakarta.persistence.Embedded;
@@ -23,6 +24,23 @@ public class Vehicle extends AuditableAbstractAggregateRoot<Vehicle> {
     private String model;
 
     protected Vehicle() {}
+    
+    public Vehicle(CreateVehicleCommand command) {
+        this.driverId = new DriverId(command.driverId());
+        this.licensePlate = command.licensePlate();
+        this.brand = command.brand();
+        this.model = command.model();
+    }
+
+    public void updateVehicle(String licensePlate, String brand, String model) {
+        this.licensePlate = licensePlate;
+        this.brand = brand;
+        this.model = model;
+    }
+
+    public Long getDriverId(){
+        return this.driverId.driverId();
+    }
 
 
 
