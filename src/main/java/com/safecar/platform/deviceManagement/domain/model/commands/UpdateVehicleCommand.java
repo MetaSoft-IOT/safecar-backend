@@ -1,5 +1,7 @@
 package com.safecar.platform.deviceManagement.domain.model.commands;
 
+import java.util.UUID;
+
 public record UpdateVehicleCommand(
         Long vehicleId,
         Long driverId,
@@ -8,7 +10,7 @@ public record UpdateVehicleCommand(
         String model
 ) {
     public UpdateVehicleCommand {
-        if (vehicleId == null || vehicleId <= 0) {
+        if (vehicleId == null) {
             throw new IllegalArgumentException("Vehicle ID must be a positive non-null value.");
         }
         if (driverId == null || driverId <= 0) {
