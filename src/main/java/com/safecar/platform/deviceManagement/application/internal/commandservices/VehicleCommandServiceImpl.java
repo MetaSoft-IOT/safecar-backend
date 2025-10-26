@@ -2,12 +2,16 @@ package com.safecar.platform.deviceManagement.application.internal.commandservic
 
 import com.safecar.platform.deviceManagement.domain.model.aggregates.Vehicle;
 import com.safecar.platform.deviceManagement.domain.model.commands.CreateVehicleCommand;
+import com.safecar.platform.deviceManagement.domain.model.commands.DeleteVehicleCommand;
 import com.safecar.platform.deviceManagement.domain.model.commands.UpdateVehicleCommand;
 import com.safecar.platform.deviceManagement.domain.services.VehicleCommandService;
 import com.safecar.platform.deviceManagement.infrastructure.persistence.jpa.repositories.VehicleRepository;
+import org.springframework.stereotype.Service;
 
 import java.util.Optional;
+import java.util.UUID;
 
+@Service
 public class VehicleCommandServiceImpl implements VehicleCommandService {
     private final VehicleRepository vehicleRepository;
 
@@ -24,18 +28,17 @@ public class VehicleCommandServiceImpl implements VehicleCommandService {
 
     @Override
     public Optional<Vehicle> handle(UpdateVehicleCommand command) {
-        var vehicle = this.vehicleRepository.findById(command.vehicleId())
+        // Convert Long to UUID
+        UUID vehicleId = new UUID(command.vehicleId(), 0L);
+        var vehicle = this.vehicleRepository.findById(vehicleId)
                 .orElseThrow(() -> new IllegalArgumentException("Vehicle not found with ID: " + command.vehicleId()));
-        vehicle.updateVehicle(command .licensePlate(), command.brand(), command.model());
+        vehicle.updateVehicle(command.licensePlate(), command.brand(), command.model());
         var vehicleUpdated = vehicleRepository.save(vehicle);
         return Optional.of(vehicleUpdated);
-
     }
 
     @Override
-    public void handleDelete(Long vehicleId) {
-        var vehicle = this.vehicleRepository.findById(vehicleId)
-                .orElseThrow(() -> new IllegalArgumentException("Vehicle not found with ID: " + vehicleId));
-        this.vehicleRepository.delete(vehicle);
+    public void handle(DeleteVehicleCommand command) {
+
     }
 }
