@@ -3,14 +3,17 @@ package com.safecar.platform.deviceManagement.domain.model.aggregates;
 import com.safecar.platform.deviceManagement.domain.model.commands.CreateVehicleCommand;
 import com.safecar.platform.deviceManagement.domain.model.valueobjects.DriverId;
 import com.safecar.platform.shared.domain.model.aggregates.AuditableAbstractAggregateRoot;
-import jakarta.persistence.Embedded;
-import jakarta.persistence.Entity;
+import jakarta.persistence.*;
 import jakarta.validation.constraints.NotNull;
 import lombok.Getter;
+
+import java.util.UUID;
 
 @Getter
 @Entity
 public class Vehicle extends AuditableAbstractAggregateRoot<Vehicle> {
+  // Ensure this matches the repository method
+
     @Embedded
     private DriverId driverId;
 
