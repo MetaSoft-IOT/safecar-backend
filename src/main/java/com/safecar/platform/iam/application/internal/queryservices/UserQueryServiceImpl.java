@@ -1,5 +1,7 @@
 package com.safecar.platform.iam.application.internal.queryservices;
 
+import com.safecar.platform.iam.domain.model.queries.CheckUserByIdQuery;
+import com.safecar.platform.iam.domain.model.queries.GetUserByIdQuery;
 import org.springframework.stereotype.Service;
 
 import com.safecar.platform.iam.domain.model.aggregates.User;
@@ -20,7 +22,7 @@ import java.util.Optional;
  */
 @Service
 public class UserQueryServiceImpl implements UserQueryService {
-    private final UserRepository userRepository;
+    private final UserRepository    userRepository;
 
     /**
      * Constructor
@@ -48,5 +50,15 @@ public class UserQueryServiceImpl implements UserQueryService {
     @Override
     public Optional<User> handle(GetUserByEmailQuery query) {
     return userRepository.findByEmail(new Email(query.email()));
+    }
+
+    @Override
+    public Optional<User> handle(GetUserByIdQuery query) {
+        return userRepository.findById(query.userId());
+    }
+
+    @Override
+    public boolean handle(CheckUserByIdQuery query) {
+        return userRepository.existsById(query.userId());
     }
 }
