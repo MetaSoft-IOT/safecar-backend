@@ -63,5 +63,5 @@ public class ProfileContextFacadeImpl implements ProfilesContextFacade {
         var query = new GetMechanicByUserIdAsyncQuery(userId);
         var existingMechanic = mechanicQueryService.handle(query);
         return existingMechanic.isPresent();
-    }
+    };
 }
