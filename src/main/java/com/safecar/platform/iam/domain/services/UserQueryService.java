@@ -4,8 +4,10 @@ import java.util.List;
 import java.util.Optional;
 
 import com.safecar.platform.iam.domain.model.aggregates.User;
+import com.safecar.platform.iam.domain.model.queries.CheckUserByIdQuery;
 import com.safecar.platform.iam.domain.model.queries.GetAllUsersQuery;
 import com.safecar.platform.iam.domain.model.queries.GetUserByEmailQuery;
+import com.safecar.platform.iam.domain.model.queries.GetUserByIdQuery;
 
 /**
  * Service interface for handling user-related query operations.
@@ -18,19 +20,16 @@ import com.safecar.platform.iam.domain.model.queries.GetUserByEmailQuery;
  */
 public interface UserQueryService {
 
-    /**
-     * Handles the query to retrieve all users.
-     *
-     * @param query the query object for retrieving all users
-     * @return a list of all {@link UserAggregate} instances
-     */
+
     List<User> handle(GetAllUsersQuery query);
 
-    /**
-     * Handles the query to retrieve a user by their email.
-     *
-     * @param query the query object containing the email
-     * @return an {@link Optional} containing the found {@link User}, or empty if not found
-     */
+
     Optional<User> handle(GetUserByEmailQuery query);
+
+    Optional<User> handle(GetUserByIdQuery query);
+
+    boolean handle(CheckUserByIdQuery query);
+
+
+
 }
