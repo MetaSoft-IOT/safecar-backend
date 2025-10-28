@@ -6,7 +6,7 @@ import com.safecar.platform.deviceManagement.interfaces.rest.resources.VehicleRe
 public class VehicleResourceFromEntityAssembler {
     public static VehicleResource toResourceFromEntity(Vehicle vehicle) {
         return new VehicleResource(
-                vehicle.getId().hashCode() & 0xFFFFFFFFL, // Convert UUID to Long
+                vehicle.getId(), // Convert UUID to Long
                 vehicle.getDriverId(),
                 vehicle.getLicensePlate(),
                 vehicle.getBrand(),
