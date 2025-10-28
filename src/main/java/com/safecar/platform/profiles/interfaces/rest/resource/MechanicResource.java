@@ -3,8 +3,8 @@ package com.safecar.platform.profiles.interfaces.rest.resource;
 import java.util.UUID;
 
 public record MechanicResource(
-        UUID userId,
-        UUID MechanicId,
+        Long userId,
+        Long MechanicId,
         String fullName,
         String city,
         String country,

@@ -14,6 +14,6 @@ import java.util.UUID;
  * @version 1.0.0
  */
 public record UserRegisteredEvent(
-        UUID userId
+        Long userId
 ) {
 }

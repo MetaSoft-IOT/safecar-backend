@@ -4,5 +4,5 @@ import java.util.UUID;
 
 public interface UsersContextFacade {
 
-    boolean exitsUserById(UUID id);
+    boolean exitsUserById(Long id);
 }

@@ -32,7 +32,7 @@ public class ProfileController {
     }
 
     @GetMapping(value = "/driver/{userId}")
-    public ResponseEntity<DriverResource> getDriver(@PathVariable UUID userId) {
+    public ResponseEntity<DriverResource> getDriver(@PathVariable Long userId) {
         var getDriverByUserIdQuery = new GetDriverByUserIdAsyncQuery(userId);
         var driver = driverQueryService.handle(getDriverByUserIdQuery);
         if (driver.isEmpty()) {
@@ -46,7 +46,7 @@ public class ProfileController {
     }
 
     @GetMapping(value = "/vehicle/{userId}")
-    public ResponseEntity<MechanicResource> getMechanic(@PathVariable UUID userId) {
+    public ResponseEntity<MechanicResource> getMechanic(@PathVariable Long userId) {
         var getMechanicByUserIdQuery = new GetMechanicByUserIdAsyncQuery(userId);
         var mechanic = mechanicQueryService.handle(getMechanicByUserIdQuery);
         if (mechanic.isEmpty()) {

@@ -15,5 +15,5 @@ import java.util.UUID;
  * @since 1.0.0
  * @author GonzaloQu3dena
  */
-public record UserResource(UUID id, String email, List<String> roles) {
+public record UserResource(Long id, String email, List<String> roles) {
 }

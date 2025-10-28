@@ -18,7 +18,7 @@ public class UserContextFacadeImpl implements UsersContextFacade {
 
     // inherited javadoc
     @Override
-    public boolean exitsUserById(UUID id) {
+    public boolean exitsUserById(Long id) {
         var query = new GetUserByIdQuery(id);
         var existingUser = userQueryService.handle(query);
         return existingUser.isPresent();

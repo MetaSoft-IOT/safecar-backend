@@ -16,15 +16,15 @@ public class ExternalProfileService {
     }
 
 
-    public UUID createDriver(String fullName, String city, String country,
-                             String phone, String dni, UUID userId) {
+    public Long createDriver(String fullName, String city, String country,
+                             String phone, String dni, Long userId) {
         return profileContextFacade.createDriver(
                 fullName, city, country, phone, dni, userId
         );
     }
 
-    public UUID createDistributor(String fullName, String city, String country,
-                                  String phone, String companyName, String dni, UUID userId){
+    public Long createDistributor(String fullName, String city, String country,
+                                  String phone, String companyName, String dni, Long userId){
         return profileContextFacade.createMechanic(
                 fullName, city, country, phone, companyName, dni, userId
         );

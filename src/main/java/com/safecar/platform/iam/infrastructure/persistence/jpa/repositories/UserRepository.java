@@ -19,7 +19,7 @@ import com.safecar.platform.iam.domain.model.valueobjects.Email;
  * @since 1.0.0
  */
 @Repository
-public interface UserRepository extends JpaRepository<User, UUID> {
+public interface UserRepository extends JpaRepository<User, Long> {
 
     /**
      * Finds a user by their email.
@@ -37,7 +37,7 @@ public interface UserRepository extends JpaRepository<User, UUID> {
      */
     boolean existsByEmail(Email email);
 
-    boolean existsById(UUID userId);
+    boolean existsById(Long userId);
 
 
 

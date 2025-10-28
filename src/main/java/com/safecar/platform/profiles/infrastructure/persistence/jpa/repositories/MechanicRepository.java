@@ -5,13 +5,12 @@ import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.stereotype.Repository;
 
 import java.util.Optional;
-import java.util.UUID;
 
 @Repository
 public interface MechanicRepository extends JpaRepository<Mechanic, Long> {
-    Optional<Mechanic> findMechanicByUserId(UUID id);
+    Optional<Mechanic> findMechanicByUserId(Long userId);
     boolean existsByPhone_Phone(String phone);
     boolean existsByDni(String dni);
-    boolean existsByUserId(UUID userId);
+    boolean existsByUserId(Long userId);
 
 }

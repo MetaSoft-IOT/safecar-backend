@@ -9,5 +9,5 @@ import java.util.Optional;
 import java.util.UUID;
 
 public interface DriverCommandService {
-    Optional<Driver> handle(CreateDriverCommand command, UUID userId);
+    Optional<Driver> handle(CreateDriverCommand command, Long userId);
 }

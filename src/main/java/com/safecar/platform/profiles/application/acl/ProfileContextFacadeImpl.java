@@ -31,35 +31,35 @@ public class ProfileContextFacadeImpl implements ProfilesContextFacade {
     }
 
     @Override
-    public UUID createDriver(String fullName, String city, String country,
-                             String phone, String dni, UUID userId) {
+    public Long createDriver(String fullName, String city, String country,
+                             String phone, String dni, Long userId) {
 
         CreateDriverCommand command = new CreateDriverCommand(
                 fullName, city, country, phone, dni);
 
         var driver = driverCommandService.handle(command, userId);
-        return driver.map(AuditableAbstractAggregateRoot::getId) .orElse( null);
+        return driver.map(AuditableAbstractAggregateRoot::getId) .orElse( 0L);
     }
 
     @Override
-    public UUID createMechanic(String fullName, String city, String country,
-                               String phone, String companyName, String dni, UUID userId) {
+    public Long createMechanic(String fullName, String city, String country,
+                               String phone, String companyName, String dni, Long userId) {
         CreateMechanicCommand command = new CreateMechanicCommand(
                 fullName, city, country, phone, companyName, dni);
 
         var mechanic = mechanicCommandService.handle(command, userId);
-        return mechanic.map(AuditableAbstractAggregateRoot::getId).orElse(null);
+        return mechanic.map(AuditableAbstractAggregateRoot::getId).orElse(0L);
     }
 
     @Override
-    public boolean exitsDriverByUserId(UUID userId) {
+    public boolean exitsDriverByUserId(Long userId) {
         var query = new GetDriverByUserIdAsyncQuery(userId);
         var existingMechanic = driverQueryService.handle(query);
         return existingMechanic.isPresent();
     }
 
     @Override
-    public boolean exitsMechanicByUserId(UUID userId) {
+    public boolean exitsMechanicByUserId(Long userId) {
         var query = new GetMechanicByUserIdAsyncQuery(userId);
         var existingMechanic = mechanicQueryService.handle(query);
         return existingMechanic.isPresent();

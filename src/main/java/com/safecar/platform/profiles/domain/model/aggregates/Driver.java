@@ -38,11 +38,11 @@ public class Driver extends AuditableAbstractAggregateRoot<Driver> {
 
     @NotNull(message = "UserId cannot be null")
     @Positive(message = "UserId must be positive")
-    private UUID userId;
+    private Long userId;
 
 
 
-    public Driver(CreateDriverCommand command, UUID userId) {
+    public Driver(CreateDriverCommand command, Long userId) {
         this.fullName = command.fullName();
         this.city = command.city();
         this.country = command.country();

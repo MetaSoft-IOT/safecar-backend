@@ -14,5 +14,5 @@ import java.util.UUID;
  * @author GonzaloQu3dena
  * @since 1.0.0
  */
-public record AuthenticatedUserResource(UUID id, String username, String token) {
+public record AuthenticatedUserResource(Long id, String username, String token) {
 }

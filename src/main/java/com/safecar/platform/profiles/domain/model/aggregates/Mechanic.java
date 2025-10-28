@@ -40,9 +40,9 @@ public class Mechanic extends AuditableAbstractAggregateRoot<Mechanic> {
 
     @NotNull(message = "UserId cannot be null")
     @Positive(message = "UserId must be positive")
-    private UUID userId;
+    private Long userId;
 
-    public Mechanic(CreateMechanicCommand command, UUID userId) {
+    public Mechanic(CreateMechanicCommand command, Long userId) {
         this.fullName = command.fullName();
         this.city = command.city();
         this.country = command.country();

@@ -5,13 +5,13 @@ import java.util.UUID;
 public interface ProfilesContextFacade {
 
 
-    UUID createDriver(String fullName, String city, String country,
-                      String phone, String dni, UUID userId);
+    Long createDriver(String fullName, String city, String country,
+                      String phone, String dni, Long userId);
 
-    UUID createMechanic(String fullName, String city, String country,
-                        String phone, String companyName, String dni, UUID userId);
+    Long createMechanic(String fullName, String city, String country,
+                        String phone, String companyName, String dni, Long userId);
 
-    boolean exitsDriverByUserId(UUID userId);
+    boolean exitsDriverByUserId(Long userId);
 
-    boolean exitsMechanicByUserId(UUID userId);
+    boolean exitsMechanicByUserId(Long userId);
 }

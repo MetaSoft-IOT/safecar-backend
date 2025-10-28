@@ -10,12 +10,12 @@ import java.util.UUID;
 
 @Repository
 public interface DriverRepository extends JpaRepository<Driver, Long> {
-    Optional<Driver> findDriverByUserId(UUID userId);
+    Optional<Driver> findDriverByUserId(Long userId);
     // Verificar existencia de DNI
     boolean existsByDni_Dni(String dni);
 
     // Verificar existencia de Phone
     boolean existsByPhone_Phone(String phone);
 
-    boolean existsByUserId(UUID userId);
+    boolean existsByUserId(Long userId);
 }

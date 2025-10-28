@@ -19,7 +19,7 @@ public class MechanicCommandServiceImpl implements MechanicCommandService {
     }
 
     @Override
-    public Optional<Mechanic> handle(CreateMechanicCommand command, UUID userId) {
+    public Optional<Mechanic> handle(CreateMechanicCommand command, Long userId) {
         if (mechanicRepository.existsByPhone_Phone(command.phone())){
             throw new IllegalArgumentException("Phone already exists");
         }

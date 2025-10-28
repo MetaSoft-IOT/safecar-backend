@@ -29,7 +29,7 @@ public class VehicleCommandServiceImpl implements VehicleCommandService {
     @Override
     public Optional<Vehicle> handle(UpdateVehicleCommand command) {
         // Convert Long to UUID
-        UUID vehicleId = new UUID(command.vehicleId(), 0L);
+        Long vehicleId = command.vehicleId();
         var vehicle = this.vehicleRepository.findById(vehicleId)
                 .orElseThrow(() -> new IllegalArgumentException("Vehicle not found with ID: " + command.vehicleId()));
         vehicle.updateVehicle(command.licensePlate(), command.brand(), command.model());

@@ -9,5 +9,5 @@ import java.util.Optional;
 import java.util.UUID;
 
 public interface MechanicCommandService {
-    Optional<Mechanic> handle(CreateMechanicCommand command, UUID userId);
+    Optional<Mechanic> handle(CreateMechanicCommand command, Long userId);
 }

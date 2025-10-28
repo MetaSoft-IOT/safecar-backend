@@ -21,7 +21,7 @@ public class UserDetailsServiceImpl implements UserDetailsService {
 
     @Override
     public UserDetails loadUserByUsername(String userId) throws UsernameNotFoundException {
-        var user = userRepository.findById(UUID.fromString(userId))
+        var user = userRepository.findById(Long.valueOf(userId))
                 .orElseThrow(() -> new UsernameNotFoundException("User Not Found with userId: " + userId));
 
         return UserDetailsImpl.build(user);

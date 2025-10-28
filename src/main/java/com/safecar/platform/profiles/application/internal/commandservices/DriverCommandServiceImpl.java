@@ -19,7 +19,7 @@ public class DriverCommandServiceImpl implements DriverCommandService {
     }
 
     @Override
-    public Optional<Driver> handle(CreateDriverCommand command, UUID userId) {
+    public Optional<Driver> handle(CreateDriverCommand command, Long userId) {
 
         if (driverRepository.existsByPhone_Phone(command.phone())) {
             throw new IllegalArgumentException("Phone already exists");

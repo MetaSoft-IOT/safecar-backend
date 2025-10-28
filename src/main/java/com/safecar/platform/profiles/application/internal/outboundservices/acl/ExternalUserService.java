@@ -3,7 +3,6 @@ package com.safecar.platform.profiles.application.internal.outboundservices.acl;
 import com.safecar.platform.iam.interfaces.acl.UsersContextFacade;
 import org.springframework.stereotype.Service;
 
-import java.util.UUID;
 
 @Service
 public class ExternalUserService {
@@ -13,7 +12,7 @@ public class ExternalUserService {
         this.userContextFacade = userContextFacade;
     }
 
-    public void validateUserExists(UUID userId) {
+    public void validateUserExists(Long userId) {
         boolean exists = userContextFacade.exitsUserById(userId);
         if (!exists) {
             throw new IllegalArgumentException("User not found with id: " + userId);
