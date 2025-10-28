@@ -1,7 +1,7 @@
 package com.safecar.platform.shared.domain.model.aggregates;
 
 import java.util.Date;
-import java.util.UUID;
+
 
 import jakarta.persistence.*;
 import org.springframework.data.annotation.CreatedDate;
