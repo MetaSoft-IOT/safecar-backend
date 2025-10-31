@@ -42,7 +42,7 @@ public class ProfileContextFacadeImpl implements ProfilesContextFacade {
     }
 
     @Override
-    public Long createMechanic(String fullName, String city, String country,
+    public Long createWorkshop(String fullName, String city, String country,
                                String phone, String companyName, String dni, Long userId) {
         CreateMechanicCommand command = new CreateMechanicCommand(
                 fullName, city, country, phone, companyName, dni);
