@@ -1,41 +1,35 @@
 package com.safecar.platform.iam.application.internal.queryservices;
 
-import com.safecar.platform.iam.domain.model.queries.CheckUserByIdQuery;
-import com.safecar.platform.iam.domain.model.queries.GetUserByIdQuery;
-import org.springframework.stereotype.Service;
-
 import com.safecar.platform.iam.domain.model.aggregates.User;
-import com.safecar.platform.iam.domain.model.valueobjects.Email;
+import com.safecar.platform.iam.domain.model.queries.CheckUserByIdQuery;
 import com.safecar.platform.iam.domain.model.queries.GetAllUsersQuery;
-import com.safecar.platform.iam.domain.model.queries.GetUserByEmailQuery;
+import com.safecar.platform.iam.domain.model.queries.GetUserByIdQuery;
+import com.safecar.platform.iam.domain.model.queries.GetUserByUsernameQuery;
 import com.safecar.platform.iam.domain.services.UserQueryService;
 import com.safecar.platform.iam.infrastructure.persistence.jpa.repositories.UserRepository;
+import org.springframework.stereotype.Service;
 
 import java.util.List;
 import java.util.Optional;
 
-/**
- * UserQueryServiceImpl
- * <p>
- *     Implementation of the {@link UserQueryService} interface.
- * </p>
- */
 @Service
 public class UserQueryServiceImpl implements UserQueryService {
-    private final UserRepository    userRepository;
+    private final UserRepository userRepository;
 
     /**
-     * Constructor
-     * @param userRepository the {@link UserRepository} instance
+     * Constructor.
+     *
+     * @param userRepository {@link UserRepository} instance.
      */
     public UserQueryServiceImpl(UserRepository userRepository) {
         this.userRepository = userRepository;
     }
 
     /**
-     * Handles the {@link GetAllUsersQuery} query.
-     * @param query the {@link GetAllUsersQuery} instance
-     * @return the list of {@link User} instances
+     * This method is used to handle {@link GetAllUsersQuery} query.
+     * @param query {@link GetAllUsersQuery} instance.
+     * @return {@link List} of {@link User} instances.
+     * @see GetAllUsersQuery
      */
     @Override
     public List<User> handle(GetAllUsersQuery query) {
@@ -43,22 +37,30 @@ public class UserQueryServiceImpl implements UserQueryService {
     }
 
     /**
-     * Handles the {@link GetUserByEmailQuery} query.
-     * @param query the {@link GetUserByEmailQuery} instance
-     * @return the {@link User} instance if found
+     * This method is used to handle {@link GetUserByIdQuery} query.
+     * @param query {@link GetUserByIdQuery} instance.
+     * @return {@link Optional} of {@link User} instance.
+     * @see GetUserByIdQuery
      */
-    @Override
-    public Optional<User> handle(GetUserByEmailQuery query) {
-    return userRepository.findByEmail(new Email(query.email()));
-    }
-
     @Override
     public Optional<User> handle(GetUserByIdQuery query) {
         return userRepository.findById(query.userId());
+    }
+
+    /**
+     * This method is used to handle {@link GetUserByUsernameQuery} query.
+     * @param query {@link GetUserByUsernameQuery} instance.
+     * @return {@link Optional} of {@link User} instance.
+     * @see GetUserByUsernameQuery
+     */
+    @Override
+    public Optional<User> handle(GetUserByUsernameQuery query) {
+        return userRepository.findByEmail(query.email());
     }
 
     @Override
     public boolean handle(CheckUserByIdQuery query) {
         return userRepository.existsById(query.userId());
     }
+
 }
