@@ -1,84 +1,108 @@
 package com.safecar.platform.iam.application.internal.commandservices;
 
-import org.apache.commons.lang3.tuple.ImmutablePair;
-import org.springframework.stereotype.Service;
-
+import com.safecar.platform.iam.application.internal.outboundservices.acl.ExternalProfileService;
 import com.safecar.platform.iam.application.internal.outboundservices.hashing.HashingService;
 import com.safecar.platform.iam.application.internal.outboundservices.tokens.TokenService;
 import com.safecar.platform.iam.domain.model.aggregates.User;
 import com.safecar.platform.iam.domain.model.commands.SignInCommand;
-import com.safecar.platform.iam.domain.model.commands.SignUpCommand;
-import com.safecar.platform.iam.domain.model.valueobjects.Email;
+import com.safecar.platform.iam.domain.model.commands.SignUpDriverCommand;
+import com.safecar.platform.iam.domain.model.commands.SignUpWorkshopCommand;
+import com.safecar.platform.iam.domain.model.entities.Role;
 import com.safecar.platform.iam.domain.model.valueobjects.Roles;
 import com.safecar.platform.iam.domain.services.UserCommandService;
 import com.safecar.platform.iam.infrastructure.persistence.jpa.repositories.RoleRepository;
 import com.safecar.platform.iam.infrastructure.persistence.jpa.repositories.UserRepository;
+import org.apache.commons.lang3.tuple.ImmutablePair;
+import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 
+import java.util.List;
 import java.util.Optional;
-import java.util.stream.Collectors;
 
-/**
- * UserCommandServiceImpl
- * <p>
- * Implementation of UserCommandService.
- * This class is responsible for handling the SignUpCommand and SignInCommand
- * and persisting the user in the database.
- * </p>
- */
 @Service
 public class UserCommandServiceImpl implements UserCommandService {
     private final UserRepository userRepository;
+    private final RoleRepository roleRepository;
     private final HashingService hashingService;
     private final TokenService tokenService;
-    private final RoleRepository roleRepository;
+    private final ExternalProfileService externalProfileService;
 
-    /**
-     * Constructor
-     * 
-     * @param userRepository {@link UserRepository} instance
-     * @param hashingService {@link HashingService} instance
-     * @param tokenService   {@link TokenService} instance
-     * @param roleRepository {@link RoleRepository} instance
-     */
-    public UserCommandServiceImpl(UserRepository userRepository, HashingService hashingService,
-            TokenService tokenService, RoleRepository roleRepository) {
+    public UserCommandServiceImpl(UserRepository userRepository, RoleRepository roleRepository,
+                                  HashingService hashingService, TokenService tokenService,
+                                  ExternalProfileService externalProfileService) {
         this.userRepository = userRepository;
+        this.roleRepository = roleRepository;
         this.hashingService = hashingService;
         this.tokenService = tokenService;
-        this.roleRepository = roleRepository;
+        this.externalProfileService = externalProfileService;
     }
 
-    // inherited javadoc
-    @Override
-    public Optional<User> handle(SignUpCommand command) {
-        if (userRepository.existsByEmail(new Email(command.email())))
-            throw new RuntimeException("Email already exists");
-    var roles = command.roles().stream()
-        .map(role -> roleRepository.findByName(role.getName())
-            .orElseThrow(() -> new RuntimeException("Role not found")))
-        .collect(Collectors.toSet());
-    // If no roles were provided, assign the persisted default role
-    if (roles.isEmpty()) {
-        var defaultRole = roleRepository.findByName(Roles.ROLE_CLIENT)
-            .orElseThrow(() -> new RuntimeException("Default role not found"));
-        roles.add(defaultRole);
-    }
-    var user = new User(command.email(), hashingService.encode(command.password()), roles);
-    userRepository.save(user);
-    return userRepository.findByEmail(new Email(command.email()));
-    }
-
-    // inherited javadoc
     @Override
     public Optional<ImmutablePair<User, String>> handle(SignInCommand command) {
-    var user = userRepository.findByEmail(new Email(command.email()));
+        var user = userRepository.findByEmail(command.email());
         if (user.isEmpty())
             throw new RuntimeException("User not found");
-        var existingUser = user.get();
-        if (!hashingService.matches(command.password(), existingUser.getPassword()))
+        if (!hashingService.matches(command.password(), user.get().getPassword()))
             throw new RuntimeException("Invalid password");
-    // Generate token using user's UUID as subject so the UserDetailsService can load the user by id (it expects a UUID string)
-    var token = tokenService.generateToken(existingUser.getId().toString());
-        return Optional.of(ImmutablePair.of(existingUser, token));
+        var token = tokenService.generateToken(user.get().getEmail());
+        return Optional.of(ImmutablePair.of(user.get(), token));
+    }
+
+    @Override
+    @Transactional
+    public Optional<User> handle(SignUpDriverCommand command) {
+        if (userRepository.existsByEmail(command.email()))
+            throw new RuntimeException("Email already exists");
+
+        // Buscar el rol de desarrollador en el repositorio de roles
+        Role driverRole = roleRepository.findByName(Roles.valueOf("ROLE_DRIVER"))
+                .orElseThrow(() -> new RuntimeException("Driver role not found"));
+
+        // Crear una lista con el rol de desarrollador
+        List<Role> roles = List.of(driverRole);
+
+        // Crear el usuario con el rol de driver
+        var user = new User(command.email(), hashingService.encode(command.password()), roles);
+        userRepository.save(user);
+
+        Long driverId = externalProfileService.createDriver(
+                command.fullName(), command.city(), command.country(),
+                command.phone(), command.dni(), user.getId()
+        );
+
+        if (driverId == 0L) {
+            throw new RuntimeException("Failed to create Driver profile");
+        }
+
+        return Optional.of(user);
+    }
+
+    @Override
+    @Transactional
+    public Optional<User> handle(SignUpWorkshopCommand command) {
+        if (userRepository.existsByEmail(command.email()))
+            throw new RuntimeException("Email already exists");
+
+        // Buscar el rol de desarrollador en el repositorio de roles
+        Role workShopRole = roleRepository.findByName(Roles.valueOf("ROLE_WORKSHOP"))
+                .orElseThrow(() -> new RuntimeException("Workshop role not found"));
+
+        // Crear una lista con el rol de desarrollador
+        List<Role> roles = List.of(workShopRole);
+
+        // Crear el usuario con el rol de Workshop
+        var user = new User(command.email(), hashingService.encode(command.password()), roles);
+        userRepository.save(user);
+
+        Long workshopId = externalProfileService.createWorkshop(
+                command.fullName(), command.city(), command.country(),
+                command.phone(), command.companyName(), command.ruc(), user.getId()
+        );
+
+        if (workshopId == 0L) {
+            throw new RuntimeException("Failed to create WorkShop profile");
+        }
+
+        return Optional.of(user);
     }
 }
