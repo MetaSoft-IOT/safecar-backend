@@ -1,42 +1,40 @@
 package com.safecar.platform.iam.infrastructure.authorization.sfs.pipeline;
 
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
-import org.springframework.stereotype.Component;
-import org.springframework.security.core.AuthenticationException;
-import org.springframework.security.web.AuthenticationEntryPoint;
-
 import jakarta.servlet.ServletException;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+import org.springframework.security.core.AuthenticationException;
+import org.springframework.security.web.AuthenticationEntryPoint;
+import org.springframework.stereotype.Component;
 
 import java.io.IOException;
 
 /**
- * Unauthorized Request Handler Entry Point
+ * Unauthorized Request Handler.
  * <p>
- *     This class is the entry point for unauthorized requests.
- *     It will handle unauthorized requests.
+ * This class is responsible for handling unauthorized requests.
+ * It is used by the Spring Security framework to handle unauthorized requests.
+ * It implements the AuthenticationEntryPoint interface.
  * </p>
+ * @see AuthenticationEntryPoint
  */
+
 @Component
 public class UnauthorizedRequestHandlerEntryPoint implements AuthenticationEntryPoint {
+
     private static final Logger LOGGER = LoggerFactory.getLogger(UnauthorizedRequestHandlerEntryPoint.class);
 
     /**
-     * Handle unauthorized requests
-     * <p>
-     *     This method will handle unauthorized requests.
-     *     It will log the error message.
-     * </p>
-     * @param request {@link HttpServletRequest} Request
-     * @param response {@link HttpServletResponse} Response
-     * @param authenticationException {@link AuthenticationException} Authentication exception
-     * @throws IOException If an error occurs
-     * @throws ServletException If an error occurs
+     * This method is called by the Spring Security framework when an unauthorized request is detected.
+     * @param request The request that caused the exception
+     * @param response The response that will be sent to the client
+     * @param authenticationException The exception that caused the invocation
      */
     @Override
     public void commence(HttpServletRequest request, HttpServletResponse response, AuthenticationException authenticationException) throws IOException, ServletException {
         LOGGER.error("Unauthorized request: {}", authenticationException.getMessage());
+        response.sendError(HttpServletResponse.SC_UNAUTHORIZED, "Unauthorized request detected");
     }
 }

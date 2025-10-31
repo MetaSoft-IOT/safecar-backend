@@ -2,36 +2,26 @@ package com.safecar.platform.iam.infrastructure.authorization.sfs.model;
 
 import jakarta.servlet.http.HttpServletRequest;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
+import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.security.web.authentication.WebAuthenticationDetailsSource;
 
 /**
- * Utility class for building {@link UsernamePasswordAuthenticationToken} instances
- * with additional web authentication details from an HTTP request.
- * <p>
- *     This builder simplifies the creation of authentication tokens for Spring Security,
- *     associating the authenticated principal and its authorities with the current request context.
- * </p>
+ * This class is used to build the UsernamePasswordAuthenticationToken object
+ * that is used to authenticate the user.
  */
 public class UsernamePasswordAuthenticationTokenBuilder {
 
     /**
-     * Builds a {@link UsernamePasswordAuthenticationToken} for the given principal and HTTP request.
-     * <p>
-     *     The token is initialized with the provided principal, its authorities, and
-     *     attaches web authentication details extracted from the request.
-     * </p>
-     *
-     * @param principal the authenticated user details
-     * @param request   the current HTTP servlet request
-     * @return a fully initialized {@code UsernamePasswordAuthenticationToken}
+     * This method is responsible for building the UsernamePasswordAuthenticationToken object.
+     * @param principal The user details.
+     * @param request The HTTP request.
+     * @return The UsernamePasswordAuthenticationToken object.
+     * @see UsernamePasswordAuthenticationToken
+     * @see UserDetails
      */
-    public static UsernamePasswordAuthenticationToken build(UserDetailsImpl principal, HttpServletRequest request) {
-        var usernamePasswordAuthenticationToken = new UsernamePasswordAuthenticationToken(
-                principal, null, principal.getAuthorities());
-
-        usernamePasswordAuthenticationToken.setDetails(
-                new WebAuthenticationDetailsSource().buildDetails(request));
-
+    public static UsernamePasswordAuthenticationToken build(UserDetails principal, HttpServletRequest request) {
+        var usernamePasswordAuthenticationToken = new UsernamePasswordAuthenticationToken(principal, null, principal.getAuthorities());
+        usernamePasswordAuthenticationToken.setDetails(new WebAuthenticationDetailsSource().buildDetails(request));
         return usernamePasswordAuthenticationToken;
     }
 }

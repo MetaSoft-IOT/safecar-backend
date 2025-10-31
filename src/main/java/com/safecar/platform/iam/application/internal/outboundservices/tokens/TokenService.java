@@ -1,29 +1,29 @@
 package com.safecar.platform.iam.application.internal.outboundservices.tokens;
 
 /**
- * TokenService
- * <p>
- *     Interface for token service.
- *     This service is used to generate, validate and extract information from tokens.
- * </p>
+ * TokenService interface
+ * This interface is used to generate and validate tokens
  */
 public interface TokenService {
+
     /**
-     * Generate a token for a given username.
-     * @param username the username to generate the token for
-     * @return the generated token
+     * Generate a token for a given email
+     * @param username the email
+     * @return String the token
      */
     String generateToken(String username);
+
     /**
-     * Extract the username from a token.
-     * @param token the token to extract the username from
-     * @return the username extracted from the token
+     * Extract the email from a token
+     * @param token the token
+     * @return String the email
      */
     String getUsernameFromToken(String token);
+
     /**
-     * Validate a token.
-     * @param token the token to validate
-     * @return true if the token is valid, false otherwise
+     * Validate a token
+     * @param token the token
+     * @return boolean true if the token is valid, false otherwise
      */
     boolean validateToken(String token);
 }

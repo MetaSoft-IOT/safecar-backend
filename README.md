@@ -2,7 +2,7 @@
 
 ## Summary
 <p align="justify">
-SafeCar Backend Platform is part of the SafeCar IoT platform for intelligent vehicle maintenance. It connects drivers with mechanics, collects real-time vehicle data (engine, brakes, tires, consumption, and driving habits), and generates <b>preventive alerts</b> and <b>automatic reports</b> to optimize repairs. This backend is developed with <b>Java 17</b>, <b>Spring Boot Framework</b>, <b>Spring Data JPA</b> on <b>MySQL Database</b>, and includes <b>OpenAPI/Swagger UI</b> documentation.
+SafeCar Backend Platform is part of the SafeCar IoT platform for intelligent vehicle maintenance. It connects drivers with workshops, collects real-time vehicle data (engine, brakes, tires, consumption, and driving habits), and generates <b>preventive alerts</b> and <b>automatic reports</b> to optimize repairs. This backend is developed with <b>Java 17</b>, <b>Spring Boot Framework</b>, <b>Spring Data JPA</b> on <b>MySQL Database</b>, and includes <b>OpenAPI/Swagger UI</b> documentation.
 </p>
 
 ---

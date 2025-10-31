@@ -1,10 +1,9 @@
 package com.safecar.platform.iam.domain.model.entities;
 
+import java.util.List;
 import java.util.Set;
 
-import lombok.Data;
-import lombok.NoArgsConstructor;
-import lombok.AllArgsConstructor;
+import lombok.*;
 
 import jakarta.persistence.Id;
 
@@ -29,83 +28,63 @@ import com.safecar.platform.iam.domain.model.valueobjects.Roles;
  * @version 1.0
  * @since 2025-10-05
  */
-@Data
 @Entity
+@Setter
+@Getter
 @NoArgsConstructor
 @AllArgsConstructor
+@With
 public class Role {
-
-    /**
-     * The unique identifier for the role.
-     */
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
-    private Long id;
+    private Long Id;
 
-    /**
-     * The name of the role, represented as an enum.
-     */
     @Enumerated(EnumType.STRING)
-    @Column(length = 20, unique = true, nullable = false)
+    @Column(length = 20)
     private Roles name;
 
-    /**
-     * Constructs a role with the specified name.
-     *
-     * @param name the role name
-     */
     public Role(Roles name) {
         this.name = name;
     }
 
     /**
-     * Returns the default role, which is {@link Roles#ROLE_CLIENT}.
-     *
-     * @return the default client role
+     * Get the name of the role as a string
+     * @return the name of the role as a string
      */
-    public static Role getDefaultRole() {
-        return new Role(Roles.ROLE_CLIENT);
+    public String getStringName() {
+        return name.name();
     }
 
     /**
-     * Creates a role from the given string name.
-     *
-     * @param name the name of the role as a string
-     * @return the corresponding {@code Role} instance
-     * @throws IllegalArgumentException if the name does not match any role
+     * Get the default role
+     * @return the default role
+     */
+    public static Role getDefaultRole() {
+        return new Role(Roles.ROLE_ADMIN);
+    }
+
+    /**
+     * Get the role from its name
+     * @param name the name of the role
+     * @return the role
      */
     public static Role toRoleFromName(String name) {
         return new Role(Roles.valueOf(name));
     }
 
     /**
-     * Validates the provided set of roles.
-     * If the set is null or empty, returns a set containing the default role.
-     *
-     * @param roles the set of roles to validate
-     * @return a non-empty set of roles
+     * Validate the role set
+     * <p>
+     *     This method validates the role set and returns the default role if the set is empty.
+     * </p>
+     * @param roles the role set
+     * @return the role set
      */
-    public static Set<Role> validateRoles(Set<Role> roles) {
-        return roles == null || roles.isEmpty() ? Set.of(getDefaultRole()) : roles;
+    public static List<Role> validateRoleSet(List<Role> roles) {
+        if (roles == null || roles.isEmpty()) {
+            return List.of(getDefaultRole());
+        }
+        return roles;
     }
 
-    /**
-     * Returns the string representation of the role's name.
-     *
-     * @return the name of the role as a string
-     */
-    public String getStringName() {
-        return this.name.name();
-    }
-
-    /**
-     * Creates a role from the given string name.
-     *
-     * @param name the name of the role as a string
-     * @return the corresponding {@code Role} instance
-     * @throws IllegalArgumentException if the name does not match any role
-     */
-    public static Role create(String name) {
-        return new Role(Roles.valueOf(name));
-    }
 }
