@@ -2,6 +2,8 @@ package com.safecar.platform.iam.domain.services;
 
 import java.util.Optional;
 
+import com.safecar.platform.iam.domain.model.commands.SignUpDriverCommand;
+import com.safecar.platform.iam.domain.model.commands.SignUpWorkshopCommand;
 import org.apache.commons.lang3.tuple.ImmutablePair;
 
 import com.safecar.platform.iam.domain.model.aggregates.User;
@@ -18,21 +20,8 @@ import com.safecar.platform.iam.domain.model.commands.SignUpCommand;
  * @version 1.0.0
  */
 public interface UserCommandService {
-
-    /**
-     * Handles the user sign-up command.
-     *
-     * @param command the sign-up command containing user registration details
-     * @return an {@link Optional} containing the created {@link UserAggregate} if successful, or empty if not
-     */
-    Optional<User> handle(SignUpCommand command);
-
-    /**
-     * Handles the user sign-in command.
-     *
-     * @param command the sign-in command containing user authentication details
-     * @return an {@link Optional} containing an {@link ImmutablePair} of the authenticated {@link UserAggregate}
-     * and a generated authentication token if successful, or empty if authentication fails
-     */
     Optional<ImmutablePair<User, String>> handle(SignInCommand command);
+    //Optional<User> handle(SignUpCommand command);
+    Optional<User> handle(SignUpDriverCommand command);
+    Optional<User> handle(SignUpWorkshopCommand command);
 }
