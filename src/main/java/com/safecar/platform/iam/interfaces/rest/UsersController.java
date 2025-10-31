@@ -1,5 +1,8 @@
 package com.safecar.platform.iam.interfaces.rest;
 
+import com.safecar.platform.iam.domain.model.queries.GetAllUsersQuery;
+import com.safecar.platform.iam.domain.model.queries.GetUserByIdQuery;
+import com.safecar.platform.iam.interfaces.rest.transform.UserResourceFromEntityAssembler;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.responses.ApiResponse;
 import io.swagger.v3.oas.annotations.responses.ApiResponses;
@@ -11,11 +14,8 @@ import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 
-import com.safecar.platform.iam.domain.model.queries.GetAllUsersQuery;
-import com.safecar.platform.iam.domain.model.queries.GetUserByEmailQuery;
 import com.safecar.platform.iam.domain.services.UserQueryService;
 import com.safecar.platform.iam.interfaces.rest.resources.UserResource;
-import com.safecar.platform.iam.interfaces.rest.transform.UserResourceFromEntityAssembler;
 
 import java.util.List;
 
@@ -27,29 +27,20 @@ import java.util.List;
  */
 @RestController
 @RequestMapping(value = "/api/v1/users", produces = MediaType.APPLICATION_JSON_VALUE)
-@Tag(name = "Users", description = "Available User Endpoints")
+@Tag(name = "Users", description = "User Management Endpoints")
 public class UsersController {
     private final UserQueryService userQueryService;
 
-    /**
-     * Constructor.
-     *
-     * @param userQueryService The user query service.
-     */
     public UsersController(UserQueryService userQueryService) {
         this.userQueryService = userQueryService;
     }
 
     /**
-     * Get all users.
-     *
-     * @return The list of users.
+     * This method returns all the users.
+     * @return a list of user resources
+     * @see UserResource
      */
     @GetMapping
-    @Operation(summary = "Get all users", description = "Get all the users available in the system.")
-    @ApiResponses(value = {
-            @ApiResponse(responseCode = "200", description = "Users retrieved successfully."),
-            @ApiResponse(responseCode = "401", description = "Unauthorized.") })
     public ResponseEntity<List<UserResource>> getAllUsers() {
         var getAllUsersQuery = new GetAllUsersQuery();
         var users = userQueryService.handle(getAllUsersQuery);
@@ -58,19 +49,15 @@ public class UsersController {
     }
 
     /**
-     * Get user by id.
-     *
-     * @param userId The id of the user to retrieve.
-     * @return The user.
+     * This method returns the user with the given id.
+     * @param userId the user id
+     * @return the user resource with the given id
+     * @throws RuntimeException if the user is not found
+     * @see UserResource
      */
-    @GetMapping(value = "/{email}")
-    @Operation(summary = "Get user by email", description = "Get the user with the given email.")
-    @ApiResponses(value = {
-            @ApiResponse(responseCode = "200", description = "User retrieved successfully."),
-            @ApiResponse(responseCode = "404", description = "User not found."),
-            @ApiResponse(responseCode = "401", description = "Unauthorized.") })
-    public ResponseEntity<UserResource> getUserById(@PathVariable String email) {
-        var getUserByIdQuery = new GetUserByEmailQuery(email);
+    @GetMapping(value = "/{userId}")
+    public ResponseEntity<UserResource> getUserById(@PathVariable Long userId) {
+        var getUserByIdQuery = new GetUserByIdQuery(userId);
         var user = userQueryService.handle(getUserByIdQuery);
         if (user.isEmpty()) {
             return ResponseEntity.notFound().build();
