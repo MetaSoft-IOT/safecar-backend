@@ -6,8 +6,6 @@ import com.safecar.platform.iam.domain.services.UserQueryService;
 import com.safecar.platform.iam.interfaces.acl.UsersContextFacade;
 import org.springframework.stereotype.Service;
 
-import java.util.UUID;
-
 @Service
 public class UserContextFacadeImpl implements UsersContextFacade {
     private final UserQueryService userQueryService;
@@ -24,3 +22,4 @@ public class UserContextFacadeImpl implements UsersContextFacade {
         return existingUser.isPresent();
     }
 }
+
