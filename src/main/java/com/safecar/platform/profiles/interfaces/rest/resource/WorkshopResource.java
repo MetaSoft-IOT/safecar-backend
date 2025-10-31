@@ -1,10 +1,8 @@
 package com.safecar.platform.profiles.interfaces.rest.resource;
 
-import java.util.UUID;
-
-public record MechanicResource(
+public record WorkshopResource(
         Long userId,
-        Long MechanicId,
+        Long workshopId,
         String fullName,
         String city,
         String country,

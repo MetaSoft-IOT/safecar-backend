@@ -2,7 +2,7 @@ package com.safecar.platform.profiles.domain.model.aggregates;
 
 
 
-import com.safecar.platform.profiles.domain.model.commands.CreateMechanicCommand;
+import com.safecar.platform.profiles.domain.model.commands.CreateWorkshopCommand;
 import com.safecar.platform.profiles.domain.model.valueobjects.Dni;
 import com.safecar.platform.profiles.domain.model.valueobjects.Phone;
 import com.safecar.platform.shared.domain.model.aggregates.AuditableAbstractAggregateRoot;
@@ -19,7 +19,7 @@ import java.util.UUID;
 @Setter
 @Getter
 @Entity
-public class Mechanic extends AuditableAbstractAggregateRoot<Mechanic> {
+public class Workshop extends AuditableAbstractAggregateRoot<Workshop> {
     @NotBlank
     private String fullName;
 
@@ -42,7 +42,7 @@ public class Mechanic extends AuditableAbstractAggregateRoot<Mechanic> {
     @Positive(message = "UserId must be positive")
     private Long userId;
 
-    public Mechanic(CreateMechanicCommand command, Long userId) {
+    public Workshop(CreateWorkshopCommand command, Long userId) {
         this.fullName = command.fullName();
         this.city = command.city();
         this.country = command.country();
@@ -52,7 +52,7 @@ public class Mechanic extends AuditableAbstractAggregateRoot<Mechanic> {
         this.userId = userId;
     }
 
-    public Mechanic() {}
+    public Workshop() {}
 
     public String getPhone(){
         return phone.phone();

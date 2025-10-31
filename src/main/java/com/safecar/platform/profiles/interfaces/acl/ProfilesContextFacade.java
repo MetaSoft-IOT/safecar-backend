@@ -11,5 +11,5 @@ public interface ProfilesContextFacade {
 
     boolean exitsDriverByUserId(Long userId);
 
-    boolean exitsMechanicByUserId(Long userId);
+    boolean exitsWorkshopByUserId(Long userId);
 }

@@ -1,13 +1,13 @@
 package com.safecar.platform.profiles.interfaces.rest;
 
 import com.safecar.platform.profiles.domain.model.queries.GetDriverByUserIdAsyncQuery;
-import com.safecar.platform.profiles.domain.model.queries.GetMechanicByUserIdAsyncQuery;
+import com.safecar.platform.profiles.domain.model.queries.GetWorkshopByUserIdAsyncQuery;
 import com.safecar.platform.profiles.domain.services.DriverQueryService;
-import com.safecar.platform.profiles.domain.services.MechanicQueryService;
+import com.safecar.platform.profiles.domain.services.WorkshopQueryService;
 import com.safecar.platform.profiles.interfaces.rest.resource.DriverResource;
-import com.safecar.platform.profiles.interfaces.rest.resource.MechanicResource;
+import com.safecar.platform.profiles.interfaces.rest.resource.WorkshopResource;
 import com.safecar.platform.profiles.interfaces.rest.transform.DriverResourceFromEntityAssembler;
-import com.safecar.platform.profiles.interfaces.rest.transform.MechanicResourceFromEntityAssembler;
+import com.safecar.platform.profiles.interfaces.rest.transform.WorkshopResourceFromEntityAssembler;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
@@ -23,12 +23,12 @@ import org.springframework.web.bind.annotation.RestController;
 @Tag(name = "Profiles", description = "Profiles Management Endpoints")
 public class ProfileController {
     private final DriverQueryService driverQueryService;
-    private final MechanicQueryService mechanicQueryService;
+    private final WorkshopQueryService workshopQueryService;
 
     public ProfileController(DriverQueryService driverQueryService,
-                             MechanicQueryService mechanicQueryService) {
+                             WorkshopQueryService workshopQueryService) {
         this.driverQueryService = driverQueryService;
-        this.mechanicQueryService = mechanicQueryService;
+        this.workshopQueryService = workshopQueryService;
     }
 
     @GetMapping(value = "/driver/{userId}")
@@ -45,16 +45,16 @@ public class ProfileController {
         return ResponseEntity.ok(driverResource);
     }
 
-    @GetMapping(value = "/vehicle/{userId}")
-    public ResponseEntity<MechanicResource> getMechanic(@PathVariable Long userId) {
-        var getMechanicByUserIdQuery = new GetMechanicByUserIdAsyncQuery(userId);
-        var mechanic = mechanicQueryService.handle(getMechanicByUserIdQuery);
-        if (mechanic.isEmpty()) {
+    @GetMapping(value = "/workshop/{userId}")
+    public ResponseEntity<WorkshopResource> getWorkshop(@PathVariable Long userId) {
+        var getWorkshopByUserIdQuery = new GetWorkshopByUserIdAsyncQuery(userId);
+        var workshop = workshopQueryService.handle(getWorkshopByUserIdQuery);
+        if (workshop.isEmpty()) {
             return ResponseEntity.notFound().build();
         }
 
-        var mechanicResource = MechanicResourceFromEntityAssembler.toResourceFromEntity(mechanic.get());
+        var workshopResource = WorkshopResourceFromEntityAssembler.toResourceFromEntity(workshop.get());
 
-        return ResponseEntity.ok(mechanicResource);
+        return ResponseEntity.ok(workshopResource);
     }
 }
