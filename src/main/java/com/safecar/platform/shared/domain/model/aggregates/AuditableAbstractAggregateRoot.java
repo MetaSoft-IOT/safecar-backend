@@ -1,7 +1,6 @@
 package com.safecar.platform.shared.domain.model.aggregates;
 
 import java.util.Date;
-import java.util.UUID;
 
 import org.springframework.data.annotation.CreatedDate;
 import org.springframework.data.annotation.LastModifiedDate;
@@ -12,6 +11,7 @@ import lombok.Getter;
 import jakarta.persistence.Id;
 import jakarta.persistence.Column;
 import jakarta.persistence.GeneratedValue;
+import jakarta.persistence.GenerationType;
 import jakarta.persistence.EntityListeners;
 import jakarta.persistence.MappedSuperclass;
 
@@ -33,9 +33,9 @@ public class AuditableAbstractAggregateRoot<T extends AbstractAggregateRoot<T>> 
      * The unique identifier for the aggregate root.
      */
     @Id
-    @GeneratedValue
-    @Column(columnDefinition = "BINARY(16)", updatable = false, nullable = false)
-    private UUID id;
+    @GeneratedValue(strategy = GenerationType.IDENTITY)
+    @Column(nullable = false, updatable = false)
+    private Long id;
 
     /**
      * The timestamp when the entity was created.
