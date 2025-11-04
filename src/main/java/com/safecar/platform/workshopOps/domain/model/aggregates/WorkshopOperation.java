@@ -39,8 +39,9 @@ public class WorkshopOperation extends AuditableAbstractAggregateRoot<WorkshopOp
     public void assignMechanic(Long userId) {
         // basic placeholder: we might track assignments in future
         if (userId == null) throw new IllegalArgumentException("userId cannot be null");
-        // no-op for now
-        //TODO: implement mechanic assignment logic
+        // TODO: Implement mechanic assignment logic when Mechanics BC is available
+        // This would require: 1) Validation of mechanic existence, 2) Capacity tracking, 3) Schedule management
+        throw new UnsupportedOperationException("Mechanic assignment requires Mechanics bounded context integration");
     }
 
     public ServiceBay allocateBay(String label) {
