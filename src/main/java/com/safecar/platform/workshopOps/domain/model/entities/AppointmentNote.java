@@ -1,16 +1,14 @@
 package com.safecar.platform.workshopOps.domain.model.entities;
 
 import com.safecar.platform.shared.domain.model.entities.AuditableModel;
-import com.safecar.platform.workshopOps.domain.model.aggregates.Appointment;
+import com.safecar.platform.workshopOps.domain.model.aggregates.WorkshopAppointment;
 
 import jakarta.persistence.*;
 import lombok.Getter;
 
-import java.util.UUID;
-
 @Getter
 @Entity
-@Table(name = "appointment_notes")
+@Table(name = "workshop_appointment_notes")
 public class AppointmentNote extends AuditableModel {
 
     @Id
@@ -21,19 +19,19 @@ public class AppointmentNote extends AuditableModel {
     private String content;
 
     @Column(nullable = false)
-    private UUID authorId;
+    private Long authorId;
 
     @ManyToOne(fetch = FetchType.LAZY)
-    @JoinColumn(name = "appointment_id", nullable = false)
-    private Appointment appointment;
+    @JoinColumn(name = "workshop_appointment_id", nullable = false)
+    private WorkshopAppointment workshopAppointment;
 
     protected AppointmentNote() {
     }
 
-    public AppointmentNote(String content, UUID authorId, Appointment appointment) {
+    public AppointmentNote(String content, Long authorId, WorkshopAppointment workshopAppointment) {
         this.content = content;
         this.authorId = authorId;
-        this.appointment = appointment;
+        this.workshopAppointment = workshopAppointment;
     }
 }
 
