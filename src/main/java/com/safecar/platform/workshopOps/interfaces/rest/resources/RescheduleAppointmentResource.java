@@ -1,16 +1,16 @@
 package com.safecar.platform.workshopOps.interfaces.rest.resources;
 
 import jakarta.validation.constraints.NotNull;
-import java.time.LocalDateTime;
+import java.time.Instant;
 
 /**
- * Resource for rescheduling an appointment.
- *
- * @param newScheduledDate the new scheduled date and time
+ * Reschedule Appointment Resource - Represents the data required to reschedule
+ * an appointment.
+ * 
+ * @param startAt The new start time of the appointment.
+ * @param endAt   The new end time of the appointment.
  */
 public record RescheduleAppointmentResource(
-        @NotNull(message = "New scheduled date is required")
-        LocalDateTime newScheduledDate
-) {
+                @NotNull(message = "Start time is required") Instant startAt,
+                @NotNull(message = "End time is required") Instant endAt) {
 }
-

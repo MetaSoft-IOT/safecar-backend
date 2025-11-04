@@ -1,21 +1,20 @@
 package com.safecar.platform.workshopOps.interfaces.rest.resources;
 
-import java.util.Date;
-import java.util.UUID;
+import java.time.LocalDateTime;
 
 /**
- * Resource representing an appointment note.
- *
- * @param id the unique identifier of the note
- * @param content the note content
- * @param authorId the author identifier
- * @param createdAt the creation timestamp
+ * Appointment Note Resource - Represents a required appointment note.
+ * 
+ * @param id        the unique identifier of the appointment note
+ * @param content   the content of the note
+ * @param authorId  the ID of the author who created the note
+ * @param createdAt the timestamp when the note was created
+ * @param updatedAt the timestamp when the note was last updated
  */
 public record AppointmentNoteResource(
-        Long id,
-        String content,
-        UUID authorId,
-        Date createdAt
-) {
+                Long id,
+                String content,
+                Long authorId,
+                LocalDateTime createdAt,
+                LocalDateTime updatedAt) {
 }
-

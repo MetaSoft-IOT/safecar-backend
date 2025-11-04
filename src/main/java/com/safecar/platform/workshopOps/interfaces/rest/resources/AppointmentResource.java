@@ -1,41 +1,31 @@
 package com.safecar.platform.workshopOps.interfaces.rest.resources;
 
-import java.time.LocalDateTime;
+import java.time.Instant;
 import java.util.List;
-import java.util.UUID;
 
 /**
- * Resource representing an appointment.
- * <p>
- * Used as a response object for appointment-related endpoints.
- * </p>
- *
- * @param id the unique identifier of the appointment
- * @param code the appointment code
- * @param scheduledDate the scheduled date and time
- * @param endDate the end date and time
- * @param status the appointment status
- * @param serviceType the type of service
- * @param description the appointment description
- * @param customerId the customer identifier
- * @param vehicleId the vehicle identifier
- * @param mechanicId the mechanic identifier
- * @param workshopId the workshop identifier
- * @param notes the list of appointment notes
+ * Appointment Resource - Represents an appointment required in the workshop
+ * operations.
+ * 
+ * @param id          the unique identifier of the appointment
+ * @param workshopId  the ID of the workshop where the appointment is scheduled
+ * @param vehicleId   the ID of the vehicle associated with the appointment
+ * @param driverId    the ID of the driver associated with the appointment
+ * @param workOrderId the ID of the work order linked to the appointment
+ *                    (optional)
+ * @param startAt     the start time of the appointment
+ * @param endAt       the end time of the appointment
+ * @param status      the current status of the appointment
+ * @param notes       the list of notes associated with the appointment
  */
 public record AppointmentResource(
-        UUID id,
-        String code,
-        LocalDateTime scheduledDate,
-        LocalDateTime endDate,
-        String status,
-        String serviceType,
-        String description,
-        UUID customerId,
-        UUID vehicleId,
-        UUID mechanicId,
-        UUID workshopId,
-        List<AppointmentNoteResource> notes
-) {
+                Long id,
+                Long workshopId,
+                Long vehicleId,
+                Long driverId,
+                Long workOrderId,
+                Instant startAt,
+                Instant endAt,
+                String status,
+                List<AppointmentNoteResource> notes) {
 }
-

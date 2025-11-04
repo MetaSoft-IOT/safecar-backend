@@ -4,13 +4,11 @@ import jakarta.validation.constraints.NotNull;
 import java.util.UUID;
 
 /**
- * Resource for assigning a mechanic to an appointment.
- *
- * @param mechanicId the mechanic identifier
+ * Assign Mechanic Resource - Represents the data required to assign a mechanic
+ * to a task.
+ * 
+ * @param mechanicId The unique identifier of the mechanic to be assigned.
  */
 public record AssignMechanicResource(
-        @NotNull(message = "Mechanic ID is required")
-        UUID mechanicId
-) {
+                @NotNull(message = "Mechanic ID is required") UUID mechanicId) {
 }
-

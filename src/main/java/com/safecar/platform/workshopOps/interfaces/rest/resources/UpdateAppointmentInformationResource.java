@@ -3,16 +3,14 @@ package com.safecar.platform.workshopOps.interfaces.rest.resources;
 import jakarta.validation.constraints.NotBlank;
 
 /**
- * Resource for updating appointment information.
- *
- * @param serviceType the type of service
- * @param description the appointment description
+ * Update Appointment Information Resource - Represents the data required to
+ * update an appointment's information.
+ * 
+ * @param serviceType The type of service for the appointment (required).
+ * @param description Additional description or notes for the appointment
+ *                    (optional).
  */
 public record UpdateAppointmentInformationResource(
-        @NotBlank(message = "Service type is required")
-        String serviceType,
-
-        String description
-) {
+                @NotBlank(message = "Service type is required") String serviceType,
+                String description) {
 }
-

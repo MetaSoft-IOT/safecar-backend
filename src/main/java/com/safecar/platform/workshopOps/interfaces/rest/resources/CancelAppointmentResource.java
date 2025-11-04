@@ -1,15 +1,11 @@
 package com.safecar.platform.workshopOps.interfaces.rest.resources;
 
-import jakarta.validation.constraints.NotBlank;
-
 /**
- * Resource for cancelling an appointment.
- *
- * @param reason the cancellation reason
+ * Cancel Appointment Resource - Represents the data required to cancel an
+ * appointment.
+ * 
+ * @param reason The reason for cancellation (optional).
  */
 public record CancelAppointmentResource(
-        @NotBlank(message = "Cancellation reason is required")
-        String reason
-) {
+                String reason) {
 }
-
