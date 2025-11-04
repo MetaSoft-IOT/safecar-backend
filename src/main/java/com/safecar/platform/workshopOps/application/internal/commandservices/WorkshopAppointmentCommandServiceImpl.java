@@ -2,6 +2,7 @@ package com.safecar.platform.workshopOps.application.internal.commandservices;
 
 import org.springframework.stereotype.Service;
 
+import com.safecar.platform.workshopOps.application.internal.outboundservices.acl.ExternalIamService;
 import com.safecar.platform.workshopOps.domain.model.aggregates.WorkshopAppointment;
 import com.safecar.platform.workshopOps.domain.model.commands.*;
 import com.safecar.platform.workshopOps.domain.model.valueobjects.AppointmentStatus;
@@ -23,15 +24,25 @@ public class WorkshopAppointmentCommandServiceImpl implements WorkshopAppointmen
      */
     private final WorkshopAppointmentRepository repository;
     private final WorkshopOrderRepository orderRepository;
+    
+    /**
+     * Service for IAM bounded context interactions.
+     */
+    private final ExternalIamService externalIamService;
 
     /**
      * Constructor for WorkshopAppointmentCommandServiceImpl.
      * 
      * @param repository Repository for WorkshopAppointment.
+     * @param orderRepository Repository for WorkshopOrder.
+     * @param externalIamService Service for IAM bounded context interactions.
      */
-    public WorkshopAppointmentCommandServiceImpl(WorkshopAppointmentRepository repository, WorkshopOrderRepository orderRepository) {
+    public WorkshopAppointmentCommandServiceImpl(WorkshopAppointmentRepository repository, 
+                                                WorkshopOrderRepository orderRepository,
+                                                ExternalIamService externalIamService) {
         this.repository = repository;
         this.orderRepository = orderRepository;
+        this.externalIamService = externalIamService;
     }
 
     /**
@@ -39,6 +50,12 @@ public class WorkshopAppointmentCommandServiceImpl implements WorkshopAppointmen
      */
     @Override
     public void handle(CreateAppointmentCommand command) {
+
+        var driverId = command.driverId().driverId();
+
+        if (!externalIamService.validateDriverExists(driverId)) {
+            throw new IllegalArgumentException("Driver with ID " + driverId + " does not exist");
+        }
 
         var existingAppointments = repository.findByWorkshop(command.workshopId());
 
@@ -51,6 +68,10 @@ public class WorkshopAppointmentCommandServiceImpl implements WorkshopAppointmen
 
         var appointment = new WorkshopAppointment(command);
         repository.save(appointment);
+
+        // TODO: Add notification service when Notification BC is implemented
+        // TODO: Add workshop validation when Workshop BC is implemented  
+        // TODO: Add vehicle validation when Vehicle BC is implemented
     }
 
     /**
@@ -82,7 +103,7 @@ public class WorkshopAppointmentCommandServiceImpl implements WorkshopAppointmen
     public void handle(RescheduleAppointmentCommand command) {
         var appointment = repository.findById(command.appointmentId())
                 .orElseThrow(() -> new IllegalArgumentException("Appointment not found"));
-
+        
         var existingAppointments = repository.findByWorkshop(appointment.getWorkshop());
 
         var hasOverlap = existingAppointments.stream()
@@ -95,6 +116,8 @@ public class WorkshopAppointmentCommandServiceImpl implements WorkshopAppointmen
 
         appointment.reschedule(command.slot());
         repository.save(appointment);
+
+        // TODO: Add notification service when Notification BC is implemented
     }
 
     /**
@@ -107,6 +130,8 @@ public class WorkshopAppointmentCommandServiceImpl implements WorkshopAppointmen
 
         appointment.cancel();
         repository.save(appointment);
+
+        // TODO: Add notification service when Notification BC is implemented
     }
 
     /**
