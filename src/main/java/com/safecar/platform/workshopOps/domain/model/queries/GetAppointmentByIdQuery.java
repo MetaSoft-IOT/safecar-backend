@@ -1,7 +1,10 @@
 package com.safecar.platform.workshopOps.domain.model.queries;
 
-import java.util.UUID;
-
-public record GetAppointmentByIdQuery(UUID appointmentId) {
+/**
+ * Query to get an appointment by its ID.
+ */
+public record GetAppointmentByIdQuery(
+        Long appointmentId
+) {
 }
 

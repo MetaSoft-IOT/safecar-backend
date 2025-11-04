@@ -1,16 +1,15 @@
 package com.safecar.platform.workshopOps.domain.model.commands;
 
-import java.time.LocalDateTime;
-import java.util.UUID;
+import com.safecar.platform.workshopOps.domain.model.valueobjects.*;
 
+/**
+ * Command to create a new workshop appointment.
+ */
 public record CreateAppointmentCommand(
-        String code,
-        LocalDateTime scheduledDate,
-        String serviceType,
-        String description,
-        UUID customerId,
-        UUID vehicleId,
-        UUID workshopId
+        WorkshopId workshopId,
+        VehicleId vehicleId,
+        DriverId driverId,
+        ServiceSlot slot
 ) {
 }
 

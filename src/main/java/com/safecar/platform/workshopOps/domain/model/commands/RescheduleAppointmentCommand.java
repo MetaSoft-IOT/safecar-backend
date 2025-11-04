@@ -1,8 +1,13 @@
 package com.safecar.platform.workshopOps.domain.model.commands;
 
-import java.time.LocalDateTime;
-import java.util.UUID;
+import com.safecar.platform.workshopOps.domain.model.valueobjects.ServiceSlot;
 
-public record RescheduleAppointmentCommand(UUID appointmentId, LocalDateTime newScheduledDate) {
+/**
+ * Command to reschedule an appointment.
+ */
+public record RescheduleAppointmentCommand(
+        Long appointmentId,
+        ServiceSlot slot
+) {
 }
 

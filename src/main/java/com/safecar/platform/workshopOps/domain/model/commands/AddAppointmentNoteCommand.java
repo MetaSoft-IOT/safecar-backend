@@ -1,7 +1,11 @@
 package com.safecar.platform.workshopOps.domain.model.commands;
 
-import java.util.UUID;
-
-public record AddAppointmentNoteCommand(UUID appointmentId, String content, UUID authorId) {
+/**
+ * Command to add a note to a workshop appointment.
+ */
+public record AddAppointmentNoteCommand(
+        Long appointmentId,
+        String content,
+        Long authorId
+) {
 }
-
