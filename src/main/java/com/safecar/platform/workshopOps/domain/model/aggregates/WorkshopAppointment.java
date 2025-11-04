@@ -114,13 +114,25 @@ public class WorkshopAppointment extends AuditableAbstractAggregateRoot<Workshop
     public void linkToWorkOrder(WorkOrderCode code) {
         if (code == null) 
             throw new IllegalArgumentException("Work order code cannot be null");
+        // This method kept for backward compatibility; it requires repository resolution
+        throw new UnsupportedOperationException("linkToWorkOrder(code) is not supported; use service to resolve work order id and call linkToWorkOrder(workOrderId, code)");
+    }
 
-        if (!workshop.workshopId().equals(code.issuedByWorkshopId())) 
+    /**
+     * Link to Work Order using a resolved work order id. The repository lookup should be
+     * performed by the application/service layer and the resolved id passed here.
+     * @param workOrderId resolved work order id
+     * @param code work order code used for validation
+     */
+    public void linkToWorkOrder(Long workOrderId, WorkOrderCode code) {
+        if (code == null)
+            throw new IllegalArgumentException("Work order code cannot be null");
+        if (workOrderId == null)
+            throw new IllegalArgumentException("Work order id cannot be null");
+        if (!workshop.workshopId().equals(code.issuedByWorkshopId()))
             throw new IllegalStateException("Work order must be from the same workshop");
 
-        // TODO: In a real implementation, we would resolve the work order ID from the code
-        // For now, we'll use the workshop ID as a placeholder
-        this.linkedWorkOrderId = code.issuedByWorkshopId();
+        this.linkedWorkOrderId = workOrderId;
     }
 
     /**

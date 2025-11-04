@@ -1,6 +1,7 @@
 package com.safecar.platform.workshopOps.interfaces.rest;
 
 import com.safecar.platform.workshopOps.domain.model.queries.*;
+import com.safecar.platform.workshopOps.domain.model.valueobjects.WorkshopId;
 import com.safecar.platform.workshopOps.domain.services.WorkshopAppointmentCommandService;
 import com.safecar.platform.workshopOps.domain.services.WorkshopAppointmentQueryService;
 import com.safecar.platform.workshopOps.interfaces.rest.resources.*;
@@ -71,7 +72,7 @@ public class WorkshopOpsAppointmentsController {
             @RequestParam Instant from,
             @RequestParam Instant to) {
         // TODO: Create WorkshopId value object (using default display name for now)
-        var workshop = new com.safecar.platform.workshopOps.domain.model.valueobjects.WorkshopId(workshopId,
+        var workshop = new WorkshopId(workshopId,
                 "Workshop " + workshopId);
         var query = new GetAppointmentsByWorkshopAndRangeQuery(workshop, from, to);
         var appointments = queryService.handle(query);
