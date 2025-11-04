@@ -1,7 +1,6 @@
 package com.safecar.platform.shared.domain.model.aggregates;
 
 import java.util.Date;
-import java.util.UUID;
 
 import org.springframework.data.annotation.CreatedDate;
 import org.springframework.data.annotation.LastModifiedDate;
@@ -35,7 +34,7 @@ public class AuditableAbstractAggregateRoot<T extends AbstractAggregateRoot<T>> 
     @Id
     @GeneratedValue
     @Column(columnDefinition = "BINARY(16)", updatable = false, nullable = false)
-    private UUID id;
+    private Long id;
 
     /**
      * The timestamp when the entity was created.
