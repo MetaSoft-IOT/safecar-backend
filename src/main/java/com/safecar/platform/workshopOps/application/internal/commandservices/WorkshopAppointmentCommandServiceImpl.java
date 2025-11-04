@@ -6,6 +6,7 @@ import com.safecar.platform.workshopOps.domain.model.aggregates.WorkshopAppointm
 import com.safecar.platform.workshopOps.domain.model.commands.*;
 import com.safecar.platform.workshopOps.domain.model.valueobjects.AppointmentStatus;
 import com.safecar.platform.workshopOps.infrastructure.persistence.jpa.repositories.WorkshopAppointmentRepository;
+import com.safecar.platform.workshopOps.infrastructure.persistence.jpa.repositories.WorkshopOrderRepository;
 import com.safecar.platform.workshopOps.domain.services.WorkshopAppointmentCommandService;
 
 /**
@@ -21,14 +22,16 @@ public class WorkshopAppointmentCommandServiceImpl implements WorkshopAppointmen
      * Repository for WorkshopAppointment to handle persistence operations.
      */
     private final WorkshopAppointmentRepository repository;
+    private final WorkshopOrderRepository orderRepository;
 
     /**
      * Constructor for WorkshopAppointmentCommandServiceImpl.
      * 
      * @param repository Repository for WorkshopAppointment.
      */
-    public WorkshopAppointmentCommandServiceImpl(WorkshopAppointmentRepository repository) {
+    public WorkshopAppointmentCommandServiceImpl(WorkshopAppointmentRepository repository, WorkshopOrderRepository orderRepository) {
         this.repository = repository;
+        this.orderRepository = orderRepository;
     }
 
     /**
@@ -58,7 +61,17 @@ public class WorkshopAppointmentCommandServiceImpl implements WorkshopAppointmen
         var appointment = repository.findById(command.appointmentId())
                 .orElseThrow(() -> new IllegalArgumentException("Appointment not found"));
 
-        appointment.linkToWorkOrder(command.workOrderCode());
+        var code = command.workOrderCode();
+
+        // quick validation that the code was issued for the same workshop
+        if (!appointment.getWorkshop().workshopId().equals(code.issuedByWorkshopId())) {
+            throw new IllegalStateException("Work order code was not issued for the appointment workshop");
+        }
+
+        var maybeOrder = orderRepository.findByCodeValueAndWorkshop_WorkshopId(code.value(), code.issuedByWorkshopId());
+        var order = maybeOrder.orElseThrow(() -> new IllegalArgumentException("Work order not found for provided code"));
+
+        appointment.linkToWorkOrder(order.getId(), code);
         repository.save(appointment);
     }
 
