@@ -23,7 +23,7 @@ public class VehicleQueryServiceImpl implements VehicleQueryService {
     /**
      * The Vehicle Repository
      */
-    public final VehicleRepository vehicleRepository;
+    private final VehicleRepository vehicleRepository;
 
     /**
      * Constructor for VehicleQueryServiceImpl

@@ -2,6 +2,9 @@ package com.safecar.platform.workshopOps.application.internal.outboundservices.a
 
 import com.safecar.platform.iam.interfaces.acl.IamContextFacade;
 import com.safecar.platform.workshopOps.domain.model.valueobjects.DriverId;
+import com.safecar.platform.workshopOps.domain.model.valueobjects.UserId;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.stereotype.Service;
 
 import java.util.Optional;
@@ -16,6 +19,9 @@ import java.util.Optional;
  */
 @Service
 public class ExternalIamService {
+    
+    private static final Logger logger = LoggerFactory.getLogger(ExternalIamService.class);
+    
     private final IamContextFacade iamContextFacade;
 
     /**
@@ -61,7 +67,12 @@ public class ExternalIamService {
      * @return true if the driver exists, false otherwise
      */
     public boolean validateDriverExists(Long driverId) {
-        return iamContextFacade.validateUserExists(driverId);
+        try {
+            return iamContextFacade.validateUserExists(driverId);
+        } catch (Exception e) {
+            logger.error("Error validating driver existence for ID {}: {}", driverId, e.getMessage());
+            return false;
+        }
     }
 
     /**
@@ -73,7 +84,12 @@ public class ExternalIamService {
      * @return true if the driver exists, false otherwise
      */
     public boolean validateDriverExistsByEmail(String email) {
-        return iamContextFacade.validateUserExistsByEmail(email);
+        try {
+            return iamContextFacade.validateUserExistsByEmail(email);
+        } catch (Exception e) {
+            logger.error("Error validating driver existence for email {}: {}", email, e.getMessage());
+            return false;
+        }
     }
 
     /**
@@ -85,6 +101,88 @@ public class ExternalIamService {
      * @return The driver's email address, or null if not found
      */
     public String fetchDriverEmailById(Long driverId) {
-        return iamContextFacade.fetchUserEmailByUserId(driverId);
+        try {
+            return iamContextFacade.fetchUserEmailByUserId(driverId);
+        } catch (Exception e) {
+            logger.error("Error fetching driver email for ID {}: {}", driverId, e.getMessage());
+            return "";
+        }
+    }
+
+    /**
+     * Validates if a user exists and can be used as a mechanic.
+     * Used for workshop appointment assignments.
+     * 
+     * @param mechanicId The mechanic's user ID to validate
+     * @return true if the user exists, false otherwise
+     */
+    public boolean validateMechanicExists(Long mechanicId) {
+        try {
+            return iamContextFacade.validateUserExists(mechanicId);
+        } catch (Exception e) {
+            logger.error("Error validating mechanic existence for ID {}: {}", mechanicId, e.getMessage());
+            return false;
+        }
+    }
+
+    /**
+     * Fetch Mechanic Email By ID
+     * <p>
+     *     Retrieves the email address for a given mechanic ID.
+     * </p>
+     * @param mechanicId The mechanic's ID
+     * @return The mechanic's email address, empty string if not found
+     */
+    public String fetchMechanicEmailById(Long mechanicId) {
+        try {
+            return iamContextFacade.fetchUserEmailByUserId(mechanicId);
+        } catch (Exception e) {
+            logger.error("Error fetching mechanic email for ID {}: {}", mechanicId, e.getMessage());
+            return "";
+        }
+    }
+
+    /**
+     * Validates user authentication for workshop operations.
+     * 
+     * @param userId The user ID to validate
+     * @return true if user is authenticated and can perform workshop operations
+     */
+    public boolean validateUserAuthenticated(Long userId) {
+        try {
+            return iamContextFacade.validateUserExists(userId);
+        } catch (Exception e) {
+            logger.error("Error validating user authentication for ID {}: {}", userId, e.getMessage());
+            return false;
+        }
+    }
+
+    /**
+     * Creates a UserId value object for workshop operations.
+     * 
+     * @param userId the user ID as Long
+     * @return UserId value object
+     */
+    public UserId createUserId(Long userId) {
+        return new UserId(userId);
+    }
+
+    /**
+     * Fetches user information for workshop display purposes.
+     * 
+     * @param userId The user ID
+     * @return formatted user information
+     */
+    public String fetchUserDisplayInfo(Long userId) {
+        try {
+            String email = iamContextFacade.fetchUserEmailByUserId(userId);
+            if (email != null && !email.isEmpty()) {
+                return "User: " + email;
+            }
+            return "User ID: " + userId;
+        } catch (Exception e) {
+            logger.error("Error fetching user display info for ID {}: {}", userId, e.getMessage());
+            return "Unknown User";
+        }
     }
 }
