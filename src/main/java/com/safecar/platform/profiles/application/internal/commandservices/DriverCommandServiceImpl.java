@@ -8,7 +8,6 @@ import com.safecar.platform.profiles.infrastructure.persistence.jpa.repositories
 import org.springframework.stereotype.Service;
 
 import java.util.Optional;
-import java.util.UUID;
 
 @Service
 public class DriverCommandServiceImpl implements DriverCommandService {
