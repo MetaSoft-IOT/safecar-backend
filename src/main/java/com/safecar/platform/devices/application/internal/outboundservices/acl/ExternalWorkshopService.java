@@ -1,9 +1,10 @@
 package com.safecar.platform.devices.application.internal.outboundservices.acl;
 
-import com.safecar.platform.workshopOps.interfaces.acl.WorkshopOpsContextFacade;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.stereotype.Service;
+
+import com.safecar.platform.workshop.interfaces.acl.WorkshopOpsContextFacade;
 
 /**
  * External Workshop Service (Anti-Corruption Layer).
