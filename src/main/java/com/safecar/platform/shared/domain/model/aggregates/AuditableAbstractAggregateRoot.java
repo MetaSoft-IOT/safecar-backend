@@ -28,9 +28,10 @@ public class AuditableAbstractAggregateRoot<T extends AbstractAggregateRoot<T>> 
      /**
      * The unique identifier for the aggregate root.
      */
-     @Id
-     @GeneratedValue(strategy = GenerationType.IDENTITY)
-     private Long id;
+    @Id
+    @GeneratedValue(strategy = GenerationType.IDENTITY)
+    @Column(nullable = false, updatable = false)
+    private Long id;
 
     /**
      * The timestamp when the entity was created.
