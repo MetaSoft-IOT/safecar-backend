@@ -1,7 +1,6 @@
 package com.safecar.platform.iam.domain.model.aggregates;
 
 import java.util.HashSet;
-import java.util.List;
 import java.util.Set;
 import java.util.stream.Collectors;
 

@@ -20,7 +20,6 @@ import java.nio.charset.StandardCharsets;
 
 import com.safecar.platform.iam.infrastructure.tokens.jwt.BearerTokenService;
 
-
 @Service
 public class TokenServiceImpl implements BearerTokenService {
     private final Logger LOGGER = LoggerFactory.getLogger(TokenServiceImpl.class);
@@ -98,7 +97,7 @@ public class TokenServiceImpl implements BearerTokenService {
     }
 
     @Override
-    public String getUsernameFromToken(String token) {
+    public String getEmailFromToken(String token) {
         return extractClaim(token, Claims::getSubject);
     }
 
