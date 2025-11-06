@@ -32,7 +32,7 @@ import static org.springframework.util.MimeTypeUtils.APPLICATION_JSON_VALUE;
  * operations for both driver users and workshop mechanic administrators.
  */
 @RestController
-@RequestMapping(value = "/api/v1/profiles", produces = APPLICATION_JSON_VALUE)
+@RequestMapping(value = "/api/v1/users", produces = APPLICATION_JSON_VALUE)
 @Tag(name = "Profiles", description = "User Profile Management Operations for Drivers and Workshop Mechanics")
 public class ProfileController {
 
@@ -84,7 +84,7 @@ public class ProfileController {
             content = @Content
         )
     })
-    @GetMapping(value = "/{userId}")
+    @GetMapping(value = "/{userId}/profiles")
     public ResponseEntity<PersonProfileResource> getPersonProfile(
             @Parameter(
                 description = "Unique identifier of the user account", 
@@ -111,9 +111,7 @@ public class ProfileController {
      */
     @Operation(
         summary = "Create a new person profile",
-        description = "Creates a new person profile with personal details, contact information, " +
-                     "and identification data. The profile will be associated with a user account " +
-                     "for authentication and access control. Works for both driver and workshop mechanic profiles."
+        description = "Creates a new person profile with personal details"
     )
     @ApiResponses(value = {
         @ApiResponse(
@@ -135,12 +133,10 @@ public class ProfileController {
             content = @Content
         )
     })
-    @PostMapping
+    @PostMapping(value = "/{userId}")
     public ResponseEntity<PersonProfileResource> createPersonProfile(
             @Parameter(
-                description = "User ID for whom to create the profile",
-                required = true,
-                example = "12345"
+                required = true
             )
             @RequestParam Long userId,
             @Parameter(
@@ -156,5 +152,4 @@ public class ProfileController {
         var resourceOut = PersonProfileResourceFromEntityAssembler.toResourceFromEntity(created.get());
         return ResponseEntity.status(CREATED).body(resourceOut);
     }
-
 }
