@@ -28,9 +28,11 @@ public class WorkshopOpsWorkshopsController {
     private final WorkshopOperationCommandService commandService;
     private final WorkshopOperationQueryService queryService;
 
-    @PostMapping("/allocate-bay")
+    @PostMapping("/{workshopId}/bays")
     @Operation(summary = "Allocate a service bay for a workshop")
-    public ResponseEntity<Void> postAllocateServiceBay(@Valid @RequestBody AllocateServiceBayResource resource) {
+    public ResponseEntity<Void> postAllocateServiceBay(
+            @PathVariable Long workshopId,
+            @Valid @RequestBody AllocateServiceBayResource resource) {
         var command = AllocateServiceBayCommandFromResourceAssembler.toCommandFromResource(resource);
         commandService.handle(command);
         return ResponseEntity.status(HttpStatus.CREATED).build();

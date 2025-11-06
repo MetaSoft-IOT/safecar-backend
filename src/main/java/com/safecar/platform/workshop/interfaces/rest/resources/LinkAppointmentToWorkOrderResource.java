@@ -1,13 +1,10 @@
 package com.safecar.platform.workshop.interfaces.rest.resources;
 
-import jakarta.validation.constraints.NotBlank;
-
 /**
- * Link Appointment To Work Order Resource - Represents the data required to
- * link an appointment to a work order.
+ * Link Appointment To Work Order Resource - Represents the raw data required to
+ * link an appointment to a work order. Validation will be performed when mapping to domain commands.
  * 
  * @param workOrderCode The code of the work order to link the appointment to.
  */
-public record LinkAppointmentToWorkOrderResource(
-                @NotBlank(message = "Work order code is required") String workOrderCode) {
+public record LinkAppointmentToWorkOrderResource(String workOrderCode) {
 }

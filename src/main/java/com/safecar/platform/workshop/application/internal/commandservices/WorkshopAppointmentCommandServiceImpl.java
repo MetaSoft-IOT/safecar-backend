@@ -5,8 +5,14 @@ import org.springframework.stereotype.Service;
 import com.safecar.platform.workshop.application.internal.outboundservices.acl.ExternalDeviceService;
 import com.safecar.platform.workshop.application.internal.outboundservices.acl.ExternalIamService;
 import com.safecar.platform.workshop.domain.model.aggregates.WorkshopAppointment;
+import com.safecar.platform.workshop.domain.model.aggregates.WorkshopOrder;
 import com.safecar.platform.workshop.domain.model.commands.*;
 import com.safecar.platform.workshop.domain.model.valueobjects.AppointmentStatus;
+import com.safecar.platform.workshop.domain.model.valueobjects.WorkOrderStatus;
+import com.safecar.platform.workshop.domain.model.valueobjects.WorkOrderCode;
+import com.safecar.platform.workshop.domain.model.valueobjects.WorkshopId;
+import com.safecar.platform.workshop.domain.model.valueobjects.VehicleId;
+import com.safecar.platform.workshop.domain.model.valueobjects.DriverId;
 import com.safecar.platform.workshop.domain.services.WorkshopAppointmentCommandService;
 import com.safecar.platform.workshop.infrastructure.persistence.jpa.repositories.WorkshopAppointmentRepository;
 import com.safecar.platform.workshop.infrastructure.persistence.jpa.repositories.WorkshopOrderRepository;
@@ -94,7 +100,7 @@ public class WorkshopAppointmentCommandServiceImpl implements WorkshopAppointmen
             logger.debug("Driver-vehicle relationship validation successful");
 
             // Check for appointment slot conflicts
-            var existingAppointments = repository.findByWorkshop(command.workshopId());
+            var existingAppointments = repository.findByWorkOrderWorkshop(command.workshopId());
 
             var hasOverlap = existingAppointments.stream()
                     .filter(appointment -> !AppointmentStatus.CANCELLED.equals(appointment.getStatus()))
@@ -103,7 +109,10 @@ public class WorkshopAppointmentCommandServiceImpl implements WorkshopAppointmen
             if (hasOverlap)
                 throw new IllegalStateException("Appointment slot overlaps with existing appointment");
 
-            var appointment = new WorkshopAppointment(command);
+            // Find or create a work order for this service context
+            var workOrder = findOrCreateWorkOrder(command.workshopId(), command.vehicleId(), command.driverId());
+            
+            var appointment = new WorkshopAppointment(command, workOrder);
             repository.save(appointment);
             
             logger.info("Successfully created appointment for driver: {} and vehicle: {}", driverId, vehicleId);
@@ -135,7 +144,7 @@ public class WorkshopAppointmentCommandServiceImpl implements WorkshopAppointmen
         var maybeOrder = orderRepository.findByCodeValueAndWorkshop_WorkshopId(code.value(), code.issuedByWorkshopId());
         var order = maybeOrder.orElseThrow(() -> new IllegalArgumentException("Work order not found for provided code"));
 
-        appointment.linkToWorkOrder(order.getId(), code);
+        appointment.updateWorkOrder(order, code);
         repository.save(appointment);
     }
 
@@ -147,7 +156,7 @@ public class WorkshopAppointmentCommandServiceImpl implements WorkshopAppointmen
         var appointment = repository.findById(command.appointmentId())
                 .orElseThrow(() -> new IllegalArgumentException("Appointment not found"));
         
-        var existingAppointments = repository.findByWorkshop(appointment.getWorkshop());
+        var existingAppointments = repository.findByWorkOrderWorkshop(appointment.getWorkshop());
 
         var hasOverlap = existingAppointments.stream()
                 .filter(a -> !a.getId().equals(appointment.getId()))
@@ -187,5 +196,31 @@ public class WorkshopAppointmentCommandServiceImpl implements WorkshopAppointmen
 
         appointment.addNote(command.content(), command.authorId());
         repository.save(appointment);
+    }
+
+    /**
+     * Find or create a work order for the given service context.
+     * This eliminates redundancy by ensuring appointments are always linked to a work order
+     * that contains the workshop, vehicle, and driver IDs.
+     */
+    private WorkshopOrder findOrCreateWorkOrder(WorkshopId workshopId, VehicleId vehicleId, DriverId driverId) {
+        // Try to find an existing open work order for this workshop
+        var existingOrders = orderRepository.findByWorkshopAndStatus(workshopId, WorkOrderStatus.OPEN);
+        
+        // Look for an order that matches the vehicle and driver context
+        for (var order : existingOrders) {
+            if (order.getVehicle().equals(vehicleId) && order.getDriver().equals(driverId)) {
+                return order;
+            }
+        }
+        
+        // Create a new work order if none exists for this context
+        var codeValue = "WO-" + System.currentTimeMillis(); // Simple code generation
+        var workOrderCode = new WorkOrderCode(codeValue, workshopId.workshopId());
+        var openCommand = new OpenWorkOrderCommand(
+                workshopId, vehicleId, driverId, workOrderCode, null);
+        
+        var newWorkOrder = new WorkshopOrder(openCommand);
+        return orderRepository.save(newWorkOrder);
     }
 }

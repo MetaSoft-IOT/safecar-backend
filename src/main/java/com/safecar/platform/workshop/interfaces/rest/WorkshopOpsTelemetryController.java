@@ -38,21 +38,21 @@ public class WorkshopOpsTelemetryController {
     private final VehicleTelemetryQueryService queryService;
 
     /**
-     * Ingest a telemetry sample.
+     * Create a new telemetry sample.
      */
-    @PostMapping(value = "/ingest", consumes = MediaType.APPLICATION_JSON_VALUE)
-    @Operation(summary = "Ingest a telemetry sample")
-    public ResponseEntity<Void> postIngest(@RequestBody IngestTelemetrySampleCommand command) {
+    @PostMapping(consumes = MediaType.APPLICATION_JSON_VALUE)
+    @Operation(summary = "Create a new telemetry sample")
+    public ResponseEntity<Void> createTelemetrySample(@RequestBody IngestTelemetrySampleCommand command) {
         commandService.handle(command);
         return ResponseEntity.status(HttpStatus.CREATED).build();
     }
 
     /*
-     * Flush telemetry records for an aggregate id.
+     * Bulk delete telemetry records for an aggregate id.
      */
-    @PostMapping(value = "/flush", consumes = MediaType.APPLICATION_JSON_VALUE)
-    @Operation(summary = "Flush telemetry records for an aggregate id")
-    public ResponseEntity<Long> postFlush(@RequestBody FlushTelemetryCommand command) {
+    @DeleteMapping(value = "/bulk", consumes = MediaType.APPLICATION_JSON_VALUE)
+    @Operation(summary = "Bulk delete telemetry records for an aggregate id")
+    public ResponseEntity<Long> bulkDeleteTelemetry(@RequestBody FlushTelemetryCommand command) {
         var count = commandService.handle(command);
         return ResponseEntity.ok(count);
     }
@@ -60,9 +60,9 @@ public class WorkshopOpsTelemetryController {
     /*
      * Get telemetry record by id.
      */
-    @GetMapping(value = "/records/{id}")
+    @GetMapping(value = "/{id}")
     @Operation(summary = "Get telemetry record by id")
-    public ResponseEntity<TelemetryRecordResource> getRecordById(@PathVariable Long id) {
+    public ResponseEntity<TelemetryRecordResource> getTelemetryById(@PathVariable Long id) {
         var query = new GetTelemetryRecordByIdQuery(id);
         var maybe = queryService.handle(query);
         if (maybe.isEmpty())
@@ -80,9 +80,9 @@ public class WorkshopOpsTelemetryController {
      * @param to          The end time of the range.
      * @return A list of telemetry records for the vehicle in the specified range.
      */
-    @GetMapping(value = "/by-vehicle")
+    @GetMapping
     @Operation(summary = "Get telemetry records for vehicle in range")
-    public ResponseEntity<List<TelemetryRecordResource>> getByVehicleAndRange(@RequestParam Long vehicleId,
+    public ResponseEntity<List<TelemetryRecordResource>> getTelemetryByVehicleAndRange(@RequestParam Long vehicleId,
             @RequestParam String plateNumber, @RequestParam Instant from, @RequestParam Instant to) {
         var vehicle = new com.safecar.platform.workshop.domain.model.valueobjects.VehicleId(vehicleId, plateNumber);
         var query = new GetTelemetryByVehicleAndRangeQuery(vehicle, from, to);

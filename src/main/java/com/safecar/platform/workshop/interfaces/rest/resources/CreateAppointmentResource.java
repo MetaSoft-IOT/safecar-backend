@@ -1,11 +1,10 @@
 package com.safecar.platform.workshop.interfaces.rest.resources;
 
-import jakarta.validation.constraints.NotNull;
 import java.time.Instant;
 
 /**
- * Create Appointment Resource - Represents the data required to create a new
- * appointment.
+ * Create Appointment Resource - Represents the raw data required to create a new
+ * appointment. Validation will be performed when mapping to domain commands.
  * 
  * @param workshopId The ID of the workshop where the appointment is to be
  *                   created.
@@ -16,9 +15,9 @@ import java.time.Instant;
  * @param endAt      The end time of the appointment.
  */
 public record CreateAppointmentResource(
-        @NotNull(message = "Workshop ID is required") Long workshopId,
-        @NotNull(message = "Vehicle ID is required") Long vehicleId,
-        @NotNull(message = "Driver ID is required") Long driverId,
-        @NotNull(message = "Start time is required") Instant startAt,
-        @NotNull(message = "End time is required") Instant endAt) {
+        Long workshopId,
+        Long vehicleId,
+        Long driverId,
+        Instant startAt,
+        Instant endAt) {
 }

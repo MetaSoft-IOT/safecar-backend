@@ -22,7 +22,7 @@ import java.util.stream.Collectors;
  * Workshop Ops Workshop Orders Controller - REST controller for managing workshop work orders.
  */
 @RestController
-@RequestMapping(value = "/api/v1/workorders", produces = MediaType.APPLICATION_JSON_VALUE)
+@RequestMapping(value = "/api/v1/workshops/{workshopId}/work-orders", produces = MediaType.APPLICATION_JSON_VALUE)
 @RequiredArgsConstructor
 @Tag(name = "Workshop Work Orders", description = "Work order management endpoints")
 public class WorkshopOpsWorkshopOrdersController {
@@ -34,26 +34,32 @@ public class WorkshopOpsWorkshopOrdersController {
     private final WorkshopOrderQueryService queryService;
 
     /**
-     * Create a new work order.
+     * Create a new work order for a specific workshop.
+     * @param workshopId The ID of the workshop.
      * @param resource The resource containing the work order details.
      * @return A ResponseEntity indicating the result of the operation.
      */
     @PostMapping
-    @Operation(summary = "Create a new work order")
-    public ResponseEntity<Void> postCreate(@Valid @RequestBody CreateWorkOrderResource resource) {
+    @Operation(summary = "Create a new work order for a workshop")
+    public ResponseEntity<Void> createWorkOrder(
+            @PathVariable Long workshopId,
+            @Valid @RequestBody CreateWorkOrderResource resource) {
         var command = CreateWorkOrderCommandFromResourceAssembler.toCommandFromResource(resource);
         commandService.handle(command);
         return ResponseEntity.status(HttpStatus.CREATED).build();
     }
 
     /**
-     * Get a work order by ID.
+     * Get a work order by ID within a specific workshop.
+     * @param workshopId The ID of the workshop.
      * @param id The ID of the work order.
      * @return A ResponseEntity containing the work order resource or not found.
      */
     @GetMapping("/{id}")
-    @Operation(summary = "Get a work order by ID")
-    public ResponseEntity<WorkOrderResource> getById(@PathVariable Long id) {
+    @Operation(summary = "Get a work order by ID within a workshop")
+    public ResponseEntity<WorkOrderResource> getWorkOrderById(
+            @PathVariable Long workshopId,
+            @PathVariable Long id) {
         var query = new GetWorkOrderByIdQuery(id);
         var wo = queryService.handle(query);
         if (wo.isEmpty())
@@ -63,14 +69,14 @@ public class WorkshopOpsWorkshopOrdersController {
     }
 
     /**
-     * Get work orders by workshop (optional status).
+     * Get all work orders for a workshop with optional status filter.
      * @param workshopId The ID of the workshop.
      * @param status The optional status of the work orders.
-     * @return A ResponseEntity containing the list of work order resources or not found.
+     * @return A ResponseEntity containing the list of work order resources.
      */
-    @GetMapping("/workshop/{workshopId}")
-    @Operation(summary = "Get work orders by workshop (optional status)")
-    public ResponseEntity<List<WorkOrderResource>> getByWorkshop(
+    @GetMapping
+    @Operation(summary = "Get all work orders for a workshop with optional status filter")
+    public ResponseEntity<List<WorkOrderResource>> getWorkOrdersByWorkshop(
             @PathVariable Long workshopId,
             @RequestParam(required = false) String status) {
 
@@ -91,13 +97,16 @@ public class WorkshopOpsWorkshopOrdersController {
     }
 
     /**
-     * Close a work order.
+     * Update a work order (e.g., close, modify status).
+     * @param workshopId The ID of the workshop.
      * @param id The ID of the work order.
      * @return A ResponseEntity containing the work order resource or not found.
      */
-    @PatchMapping("/{id}/close")
-    @Operation(summary = "Close a work order")
-    public ResponseEntity<WorkOrderResource> patchClose(@PathVariable Long id) {
+    @PatchMapping("/{id}")
+    @Operation(summary = "Update a work order (e.g., close, modify status)")
+    public ResponseEntity<WorkOrderResource> updateWorkOrder(
+            @PathVariable Long workshopId,
+            @PathVariable Long id) {
         var command = new com.safecar.platform.workshop.domain.model.commands.CloseWorkOrderCommand(id);
         commandService.handle(command);
 
@@ -111,13 +120,16 @@ public class WorkshopOpsWorkshopOrdersController {
 
     /**
      * Add appointment to work order.
+     * @param workshopId The ID of the workshop.
      * @param id The ID of the work order.
      * @param resource The appointment resource to add.
      * @return A ResponseEntity indicating the result of the operation.
      */
     @PostMapping("/{id}/appointments")
     @Operation(summary = "Add appointment to work order")
-    public ResponseEntity<Void> postAddAppointment(@PathVariable Long id,
+    public ResponseEntity<Void> addAppointmentToWorkOrder(
+            @PathVariable Long workshopId,
+            @PathVariable Long id,
             @Valid @RequestBody com.safecar.platform.workshop.interfaces.rest.resources.CreateAppointmentResource resource) {
         var slot = new com.safecar.platform.workshop.domain.model.valueobjects.ServiceSlot(resource.startAt(),
                 resource.endAt());

@@ -1,9 +1,14 @@
 package com.safecar.platform.devices.application.acl;
 
+import com.safecar.platform.devices.domain.model.commands.CreateDriverCommand;
+import com.safecar.platform.devices.domain.model.queries.GetDriverByProfileIdQuery;
 import com.safecar.platform.devices.domain.model.queries.GetVehicleByIdQuery;
+import com.safecar.platform.devices.domain.services.DriverCommandService;
+import com.safecar.platform.devices.domain.services.DriverQueryService;
 import com.safecar.platform.devices.domain.services.VehicleQueryService;
 import com.safecar.platform.devices.infrastructure.persistence.jpa.repositories.VehicleRepository;
 import com.safecar.platform.devices.interfaces.acl.DevicesContextFacade;
+import com.safecar.platform.shared.domain.model.aggregates.AuditableAbstractAggregateRoot;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.stereotype.Service;
@@ -23,17 +28,25 @@ public class DevicesContextFacadeImpl implements DevicesContextFacade {
     
     private final VehicleQueryService vehicleQueryService;
     private final VehicleRepository vehicleRepository;
+    private final DriverCommandService driverCommandService;
+    private final DriverQueryService driverQueryService;
 
     /**
      * Constructor
      *
      * @param vehicleQueryService Vehicle Query Service
      * @param vehicleRepository Vehicle Repository
+     * @param driverCommandService Driver Command Service
+     * @param driverQueryService Driver Query Service
      */
     public DevicesContextFacadeImpl(VehicleQueryService vehicleQueryService,
-                                   VehicleRepository vehicleRepository) {
+                                   VehicleRepository vehicleRepository,
+                                   DriverCommandService driverCommandService,
+                                   DriverQueryService driverQueryService) {
         this.vehicleQueryService = vehicleQueryService;
         this.vehicleRepository = vehicleRepository;
+        this.driverCommandService = driverCommandService;
+        this.driverQueryService = driverQueryService;
     }
 
     // inherited javadoc
@@ -111,6 +124,45 @@ public class DevicesContextFacadeImpl implements DevicesContextFacade {
             logger.error("Error validating driver ownership for vehicle {} and driver {}: {}", 
                         vehicleId, driverId, e.getMessage());
             return false;
+        }
+    }
+
+    // inherited javadoc
+    @Override
+    public Long createDriver(Long profileId) {
+        try {
+            var command = new CreateDriverCommand(profileId);
+            var driver = driverCommandService.handle(command);
+            return driver.map(AuditableAbstractAggregateRoot::getId).orElse(0L);
+        } catch (Exception e) {
+            logger.error("Error creating driver for profile {}: {}", profileId, e.getMessage());
+            return 0L;
+        }
+    }
+
+    // inherited javadoc
+    @Override
+    public boolean existsDriverByProfileId(Long profileId) {
+        try {
+            var query = new GetDriverByProfileIdQuery(profileId);
+            var driver = driverQueryService.handle(query);
+            return driver.isPresent();
+        } catch (Exception e) {
+            logger.error("Error checking driver existence for profile {}: {}", profileId, e.getMessage());
+            return false;
+        }
+    }
+
+    // inherited javadoc
+    @Override
+    public Long getDriverIdByProfileId(Long profileId) {
+        try {
+            var query = new GetDriverByProfileIdQuery(profileId);
+            var driver = driverQueryService.handle(query);
+            return driver.map(AuditableAbstractAggregateRoot::getId).orElse(0L);
+        } catch (Exception e) {
+            logger.error("Error getting driver ID for profile {}: {}", profileId, e.getMessage());
+            return 0L;
         }
     }
 }

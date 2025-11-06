@@ -24,7 +24,7 @@ import java.util.stream.Collectors;
  * REST controller for managing workshop appointments.
  */
 @RestController
-@RequestMapping(value = "/api/v1/appointments", produces = MediaType.APPLICATION_JSON_VALUE)
+@RequestMapping(value = "/api/v1/workshops/{workshopId}/appointments", produces = MediaType.APPLICATION_JSON_VALUE)
 @RequiredArgsConstructor
 @Tag(name = "Workshop Appointments", description = "Workshop appointment management endpoints")
 public class WorkshopOpsAppointmentsController {
@@ -36,22 +36,26 @@ public class WorkshopOpsAppointmentsController {
     private final WorkshopAppointmentQueryService queryService;
 
     /**
-     * Create a new appointment.
+     * Create a new appointment for a specific workshop.
      */
     @PostMapping
-    @Operation(summary = "Create a new appointment")
-    public ResponseEntity<AppointmentResource> postCreate(@Valid @RequestBody CreateAppointmentResource resource) {
+    @Operation(summary = "Create a new appointment for a workshop")
+    public ResponseEntity<AppointmentResource> createAppointment(
+            @PathVariable Long workshopId,
+            @Valid @RequestBody CreateAppointmentResource resource) {
         var command = CreateAppointmentCommandFromResourceAssembler.toCommandFromResource(resource);
         commandService.handle(command);
         return ResponseEntity.status(HttpStatus.CREATED).build();
     }
 
     /**
-     * Get an appointment by ID.
+     * Get an appointment by ID within a specific workshop.
      */
     @GetMapping("/{id}")
-    @Operation(summary = "Get an appointment by ID")
-    public ResponseEntity<AppointmentResource> getById(@PathVariable Long id) {
+    @Operation(summary = "Get an appointment by ID within a workshop")
+    public ResponseEntity<AppointmentResource> getAppointmentById(
+            @PathVariable Long workshopId,
+            @PathVariable Long id) {
         var query = new GetAppointmentByIdQuery(id);
         var appointment = queryService.handle(query);
 
@@ -63,14 +67,14 @@ public class WorkshopOpsAppointmentsController {
     }
 
     /**
-     * Get appointments by workshop and time range.
+     * Get all appointments for a workshop with optional time range filter.
      */
-    @GetMapping("/workshop/{workshopId}")
-    @Operation(summary = "Get appointments by workshop and time range")
-    public ResponseEntity<List<AppointmentResource>> getByWorkshopAndRange(
+    @GetMapping
+    @Operation(summary = "Get all appointments for a workshop with optional time range filter")
+    public ResponseEntity<List<AppointmentResource>> getAppointmentsByWorkshop(
             @PathVariable Long workshopId,
-            @RequestParam Instant from,
-            @RequestParam Instant to) {
+            @RequestParam(required = false) Instant from,
+            @RequestParam(required = false) Instant to) {
         // TODO: Create WorkshopId value object (using default display name for now)
         var workshop = new WorkshopId(workshopId,
                 "Workshop " + workshopId);
@@ -85,11 +89,12 @@ public class WorkshopOpsAppointmentsController {
     }
 
     /**
-     * Reschedule an appointment.
+     * Update an appointment (reschedule, cancel, or other modifications).
      */
-    @PatchMapping("/{id}/reschedule")
-    @Operation(summary = "Reschedule an appointment")
-    public ResponseEntity<AppointmentResource> patchReschedule(
+    @PatchMapping("/{id}")
+    @Operation(summary = "Update an appointment (reschedule, cancel, or other modifications)")
+    public ResponseEntity<AppointmentResource> updateAppointment(
+            @PathVariable Long workshopId,
             @PathVariable Long id,
             @Valid @RequestBody RescheduleAppointmentResource resource) {
 
@@ -106,34 +111,15 @@ public class WorkshopOpsAppointmentsController {
         return ResponseEntity.ok(appointmentResource);
     }
 
-    /**
-     * Cancel an appointment.
-     */
-    @PatchMapping("/{id}/cancel")
-    @Operation(summary = "Cancel an appointment")
-    public ResponseEntity<AppointmentResource> patchCancel(
-            @PathVariable Long id,
-            @Valid @RequestBody CancelAppointmentResource resource) {
 
-        var command = CancelAppointmentCommandFromResourceAssembler.toCommandFromResource(id, resource);
-        commandService.handle(command);
-
-        var query = new GetAppointmentByIdQuery(id);
-        var appointment = queryService.handle(query);
-
-        if (appointment.isEmpty())
-            return ResponseEntity.notFound().build();
-
-        var appointmentResource = AppointmentResourceFromAggregateAssembler.toResourceFromAggregate(appointment.get());
-        return ResponseEntity.ok(appointmentResource);
-    }
 
     /**
-     * Link an appointment to a work order.
+     * Associate an appointment with a work order.
      */
-    @PatchMapping("/{id}/link-to-work-order")
-    @Operation(summary = "Link an appointment to a work order")
-    public ResponseEntity<AppointmentResource> patchLinkToWorkOrder(
+    @PutMapping("/{id}/work-order")
+    @Operation(summary = "Associate an appointment with a work order")
+    public ResponseEntity<AppointmentResource> setAppointmentWorkOrder(
+            @PathVariable Long workshopId,
             @PathVariable Long id,
             @Valid @RequestBody LinkAppointmentToWorkOrderResource resource) {
         var command = LinkAppointmentToWorkOrderCommandFromResourceAssembler.toCommandFromResource(id, resource);
@@ -154,7 +140,8 @@ public class WorkshopOpsAppointmentsController {
      */
     @PostMapping("/{id}/notes")
     @Operation(summary = "Add a note to an appointment")
-    public ResponseEntity<Void> postAddNote(
+    public ResponseEntity<Void> addAppointmentNote(
+            @PathVariable Long workshopId,
             @PathVariable Long id,
             @Valid @RequestBody AddAppointmentNoteResource resource) {
         var command = AddAppointmentNoteCommandFromResourceAssembler.toCommandFromResource(id, resource);

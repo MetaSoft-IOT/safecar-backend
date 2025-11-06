@@ -147,4 +147,6 @@ public class WorkshopOrder extends AuditableAbstractAggregateRoot<WorkshopOrder>
         this.closedAt = Instant.now();
         registerEvent(new WorkOrderClosedEvent(this.getId(), this.closedAt));
     }
+
+
 }

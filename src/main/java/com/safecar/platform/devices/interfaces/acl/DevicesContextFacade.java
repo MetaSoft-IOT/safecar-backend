@@ -72,4 +72,34 @@ public interface DevicesContextFacade {
      * @return true if driver owns the vehicle, false otherwise
      */
     boolean validateDriverOwnsVehicle(Long vehicleId, Long driverId);
+
+    /**
+     * createDriver
+     * <p>
+     *     This method creates a new driver associated with a profile.
+     * </p>
+     * @param profileId the profile ID from Profiles BC
+     * @return the driver ID if creation successful, 0L otherwise
+     */
+    Long createDriver(Long profileId);
+
+    /**
+     * existsDriverByProfileId
+     * <p>
+     *     This method checks if a driver exists for the given profile ID.
+     * </p>
+     * @param profileId the profile ID from Profiles BC
+     * @return true if driver exists, false otherwise
+     */
+    boolean existsDriverByProfileId(Long profileId);
+
+    /**
+     * getDriverIdByProfileId
+     * <p>
+     *     This method retrieves the driver ID associated with a profile ID.
+     * </p>
+     * @param profileId the profile ID from Profiles BC
+     * @return the driver ID if found, 0L otherwise
+     */
+    Long getDriverIdByProfileId(Long profileId);
 }

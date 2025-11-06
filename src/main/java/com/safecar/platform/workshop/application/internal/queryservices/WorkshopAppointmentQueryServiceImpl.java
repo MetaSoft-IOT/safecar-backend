@@ -39,7 +39,7 @@ public class WorkshopAppointmentQueryServiceImpl implements WorkshopAppointmentQ
      */
     @Override
     public List<WorkshopAppointment> handle(GetAppointmentsByWorkshopAndRangeQuery query) {
-        return repository.findByWorkshopAndScheduledAtStartAtBetween(
+        return repository.findByWorkOrderWorkshopAndScheduledAtStartAtBetween(
             query.workshopId(), 
             query.from(), 
             query.to()
@@ -51,6 +51,6 @@ public class WorkshopAppointmentQueryServiceImpl implements WorkshopAppointmentQ
      */
     @Override
     public List<WorkshopAppointment> handle(GetAppointmentsByWorkOrderQuery query) {
-        return repository.findByLinkedWorkOrderId(query.workOrderId());
+        return repository.findByWorkOrder_Id(query.workOrderId());
     }
 }

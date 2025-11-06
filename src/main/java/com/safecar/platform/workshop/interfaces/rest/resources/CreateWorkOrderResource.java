@@ -1,15 +1,15 @@
 package com.safecar.platform.workshop.interfaces.rest.resources;
 
-import jakarta.validation.constraints.NotNull;
 import java.time.Instant;
 
 /**
  * Create Work Order Resource - Resource to create a work order.
+ * Raw data will be validated when mapping to domain commands.
  */
 public record CreateWorkOrderResource(
-        @NotNull(message = "Workshop ID is required") Long workshopId,
-        @NotNull(message = "Vehicle ID is required") Long vehicleId,
-        @NotNull(message = "Driver ID is required") Long driverId,
-        @NotNull(message = "Work order code is required") String code,
+        Long workshopId,
+        Long vehicleId,
+        Long driverId,
+        String code,
         Instant openedAt) {
 }

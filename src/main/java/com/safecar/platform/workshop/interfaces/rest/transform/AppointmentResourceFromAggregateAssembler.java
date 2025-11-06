@@ -28,7 +28,7 @@ public class AppointmentResourceFromAggregateAssembler {
                 aggregate.getWorkshop().workshopId(),
                 aggregate.getVehicle().vehicleId(),
                 aggregate.getDriver().driverId(),
-                aggregate.getLinkedWorkOrderId(),
+                aggregate.getWorkOrderId(),
                 aggregate.getScheduledAt().startAt(),
                 aggregate.getScheduledAt().endAt(),
                 aggregate.getStatus().name(),

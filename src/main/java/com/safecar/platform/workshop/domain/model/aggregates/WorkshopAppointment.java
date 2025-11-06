@@ -38,40 +38,13 @@ public class WorkshopAppointment extends AuditableAbstractAggregateRoot<Workshop
     private ServiceSlot scheduledAt;
 
     /**
-     * Workshop Identifier - The identifier of the workshop where the appointment is scheduled.
+     * Work Order Reference - Reference to the work order that contains all entity IDs.
+     * This eliminates redundancy of workshop, vehicle, and driver IDs by using the work order as single source.
+     * The work order contains the complete context of the service (workshop + vehicle + driver).
      */
-    @Embedded
-    @AttributeOverrides({
-        @AttributeOverride(name = "workshopId", column = @Column(name = "workshop_id")),
-        @AttributeOverride(name = "displayName", column = @Column(name = "workshop_display_name"))
-    })
-    private WorkshopId workshop;
-
-    /**
-     * Vehicle Identifier - The identifier of the vehicle for which the appointment is scheduled.
-     */
-    @Embedded
-    @AttributeOverrides({
-        @AttributeOverride(name = "vehicleId", column = @Column(name = "vehicle_id")),
-        @AttributeOverride(name = "plateNumber", column = @Column(name = "vehicle_plate_number"))
-    })
-    private VehicleId vehicle;
-
-    /**
-     * Driver Identifier - The identifier of the driver associated with the appointment.
-     */
-    @Embedded
-    @AttributeOverrides({
-        @AttributeOverride(name = "driverId", column = @Column(name = "driver_id")),
-        @AttributeOverride(name = "fullName", column = @Column(name = "driver_full_name"))
-    })
-    private DriverId driver;
-
-    /**
-     * Linked Work Order ID - The identifier of the linked work order, if any.
-     */
-    @Column(name = "linked_work_order_id")
-    private Long linkedWorkOrderId;
+    @ManyToOne(fetch = FetchType.EAGER)
+    @JoinColumn(name = "work_order_id")
+    private WorkshopOrder workOrder;
 
     /**
      * List of notes - The notes associated with the appointment.
@@ -88,23 +61,22 @@ public class WorkshopAppointment extends AuditableAbstractAggregateRoot<Workshop
     }
 
     /**
-     * Constructs a WorkshopAppointment from a CreateAppointmentCommand.
+     * Constructs a WorkshopAppointment from a CreateAppointmentCommand and a WorkshopOrder.
      * @param command The command containing appointment details
+     * @param workOrder The work order that contains all related entity IDs
      */
-    public WorkshopAppointment(CreateAppointmentCommand command) {
+    public WorkshopAppointment(CreateAppointmentCommand command, WorkshopOrder workOrder) {
         this();
         this.scheduledAt = command.slot();
-        this.workshop = command.workshopId();
-        this.vehicle = command.vehicleId();
-        this.driver = command.driverId();
+        this.workOrder = workOrder;
         
         registerEvent(new AppointmentCreatedEvent(
             this.getId(), 
-            this.workshop, 
-            this.vehicle, 
-            this.driver, 
+            workOrder.getWorkshop(), 
+            workOrder.getVehicle(), 
+            workOrder.getDriver(), 
             this.scheduledAt, 
-            this.linkedWorkOrderId
+            workOrder.getId()
         ));
     }
 
@@ -116,24 +88,25 @@ public class WorkshopAppointment extends AuditableAbstractAggregateRoot<Workshop
         if (code == null) 
             throw new IllegalArgumentException("Work order code cannot be null");
         // This method kept for backward compatibility; it requires repository resolution
-        throw new UnsupportedOperationException("linkToWorkOrder(code) is not supported; use service to resolve work order id and call linkToWorkOrder(workOrderId, code)");
+        throw new UnsupportedOperationException("linkToWorkOrder(code) is not supported; use service to resolve work order id and call updateWorkOrder(workOrderId, code)");
     }
 
     /**
-     * Link to Work Order using a resolved work order id. The repository lookup should be
-     * performed by the application/service layer and the resolved id passed here.
-     * @param workOrderId resolved work order id
-     * @param code work order code used for validation
+     * Update Work Order - Changes the work order associated with this appointment.
+     * @param newWorkOrder the new work order to link to
+     * @param code work order code used for validation  
      */
-    public void linkToWorkOrder(Long workOrderId, WorkOrderCode code) {
+    public void updateWorkOrder(WorkshopOrder newWorkOrder, WorkOrderCode code) {
         if (code == null)
             throw new IllegalArgumentException("Work order code cannot be null");
-        if (workOrderId == null)
-            throw new IllegalArgumentException("Work order id cannot be null");
-        if (!workshop.workshopId().equals(code.issuedByWorkshopId()))
-            throw new IllegalStateException("Work order must be from the same workshop");
-
-        this.linkedWorkOrderId = workOrderId;
+        if (newWorkOrder == null)
+            throw new IllegalArgumentException("Work order cannot be null");
+        
+        // Validation that workshops match
+        if (!this.workOrder.getWorkshop().workshopId().equals(newWorkOrder.getWorkshop().workshopId()))
+            throw new IllegalStateException("New work order must be from the same workshop");
+        
+        this.workOrder = newWorkOrder;
     }
 
     /**
@@ -192,11 +165,53 @@ public class WorkshopAppointment extends AuditableAbstractAggregateRoot<Workshop
     }
 
     /**
+     * Get Work Order ID - Gets the ID of the associated work order.
+     * @return the work order ID 
+     */
+    public Long getWorkOrderId() {
+        return workOrder != null ? workOrder.getId() : null;
+    }
+
+    /**
+     * Get Work Order - Gets the associated work order.
+     * @return the work order
+     */
+    public WorkshopOrder getWorkOrder() {
+        return workOrder;
+    }
+
+    /**
      * Is Linked To Work Order - This method checks if the appointment is linked to a work order.
      * @return true if linked to a work order, false otherwise
      */
     public boolean isLinkedToWorkOrder() {
-        return linkedWorkOrderId != null;
+        return workOrder != null;
+    }
+
+    // Convenience methods to access IDs from the associated WorkOrder (avoiding redundancy)
+    
+    /**
+     * Get Workshop ID - Gets workshop ID from the associated work order
+     * @return WorkshopId from work order, null if no work order linked
+     */
+    public WorkshopId getWorkshop() {
+        return workOrder != null ? workOrder.getWorkshop() : null;
+    }
+
+    /**
+     * Get Vehicle ID - Gets vehicle ID from the associated work order
+     * @return VehicleId from work order, null if no work order linked
+     */
+    public VehicleId getVehicle() {
+        return workOrder != null ? workOrder.getVehicle() : null;
+    }
+
+    /**
+     * Get Driver ID - Gets driver ID from the associated work order
+     * @return DriverId from work order, null if no work order linked
+     */
+    public DriverId getDriver() {
+        return workOrder != null ? workOrder.getDriver() : null;
     }
 
     /**
@@ -213,4 +228,6 @@ public class WorkshopAppointment extends AuditableAbstractAggregateRoot<Workshop
         var note = new AppointmentNote(content, authorId, this);
         this.notes.add(note);
     }
+
+
 }

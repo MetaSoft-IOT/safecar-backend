@@ -23,25 +23,25 @@ public interface WorkshopAppointmentRepository extends JpaRepository<WorkshopApp
     * @param workshopId the ID of the workshop
     * @return list of WorkshopAppointments associated with the specified workshop
     */
-    List<WorkshopAppointment> findByWorkshop(WorkshopId workshopId);
+    List<WorkshopAppointment> findByWorkOrderWorkshop(WorkshopId workshopId);
     /**
      * Finds all WorkshopAppointments for a given VehicleId.
      * @param vehicleId the ID of the vehicle
      * @return list of WorkshopAppointments associated with the specified vehicle
      */
-    List<WorkshopAppointment> findByVehicle(VehicleId vehicleId);
+    List<WorkshopAppointment> findByWorkOrderVehicle(VehicleId vehicleId);
     /*
      * Finds all WorkshopAppointments for a given DriverId.
      * @param driverId the ID of the driver
      * @return list of WorkshopAppointments associated with the specified driver
      */
-    List<WorkshopAppointment> findByDriver(DriverId driverId);
+    List<WorkshopAppointment> findByWorkOrderDriver(DriverId driverId);
     /**
      * Finds all WorkshopAppointments linked to a specific Work Order ID.
-     * @param linkedWorkOrderId the ID of the linked work order
+     * @param workOrderId the ID of the linked work order
      * @return list of WorkshopAppointments associated with the specified work order
      */
-    List<WorkshopAppointment> findByLinkedWorkOrderId(Long linkedWorkOrderId);
+    List<WorkshopAppointment> findByWorkOrder_Id(Long workOrderId);
     /**
      * Finds all WorkshopAppointments with a specific status.
      * @param status the status of the appointment
@@ -62,5 +62,5 @@ public interface WorkshopAppointmentRepository extends JpaRepository<WorkshopApp
      * @param endDate the end date of the appointment
      * @return list of WorkshopAppointments for the specified workshop scheduled between the specified dates
      */
-    List<WorkshopAppointment> findByWorkshopAndScheduledAtStartAtBetween(WorkshopId workshopId, Instant startDate, Instant endDate);
+    List<WorkshopAppointment> findByWorkOrderWorkshopAndScheduledAtStartAtBetween(WorkshopId workshopId, Instant startDate, Instant endDate);
 }
