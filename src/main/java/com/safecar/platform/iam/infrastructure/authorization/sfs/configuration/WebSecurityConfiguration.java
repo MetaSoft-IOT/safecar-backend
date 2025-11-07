@@ -115,6 +115,7 @@ public class WebSecurityConfiguration {
         // URLs we leave unsecured (including Swagger/OpenAPI)
         String[] publicMatchers = {
                 "/api/v1/authentication/**",
+                "/api/payments/**",  // ← PAYMENTS SIN AUTENTICACIÓN
                 "/v3/api-docs/**",
                 "/swagger-ui.html",
                 "/swagger-ui/**",
