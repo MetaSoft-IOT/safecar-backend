@@ -22,6 +22,9 @@ import java.util.stream.Collectors;
 
 /**
  * REST controller for managing workshop appointments.
+ * <p>
+ * Provides ReSTful endpoints for managing the {@link WorkshopAppointment} entities.
+ * </p>
  */
 @RestController
 @RequestMapping(value = "/api/v1/workshops/{workshopId}/appointments", produces = MediaType.APPLICATION_JSON_VALUE)
@@ -29,14 +32,14 @@ import java.util.stream.Collectors;
 @Tag(name = "Appointments", description = "Workshop appointment management endpoints")
 public class AppointmentsController {
 
-    /**
-     * Command and Query services for workshop appointments.
-     */
     private final WorkshopAppointmentCommandService commandService;
     private final WorkshopAppointmentQueryService queryService;
 
     /**
-     * Create a new appointment for a specific workshop.
+     * Create Appointment for a specific workshop.
+     * @param workshopId the workshop ID
+     * @param resource the appointment creation resource
+     * @return ResponseEntity with status CREATED
      */
     @PostMapping
     @Operation(summary = "Create a new appointment for a workshop")
@@ -49,7 +52,10 @@ public class AppointmentsController {
     }
 
     /**
-     * Get an appointment by ID within a specific workshop.
+     * Get an appointment by ID within a workshop.
+     * @param workshopId the workshop ID
+     * @param id the appointment ID
+     * @return ResponseEntity with the appointment resource or NOT FOUND status
      */
     @GetMapping("/{id}")
     @Operation(summary = "Get an appointment by ID within a workshop")
@@ -67,7 +73,11 @@ public class AppointmentsController {
     }
 
     /**
-     * Get all appointments for a workshop with optional time range filter.
+     * Get all appointments for a workshop, optionally filtered by a time range.
+     * @param workshopId the workshop ID
+     * @param from the start of the time range (optional)
+     * @param to the end of the time range (optional)
+     * @return ResponseEntity with a list of appointment resources
      */
     @GetMapping
     @Operation(summary = "Get all appointments for a workshop with optional time range filter")
