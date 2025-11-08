@@ -2,7 +2,7 @@ package com.safecar.platform.devices.application.internal.commandservices;
 
 import com.safecar.platform.devices.domain.model.aggregates.Driver;
 import com.safecar.platform.devices.domain.model.commands.CreateDriverCommand;
-import com.safecar.platform.devices.domain.model.commands.UpdateDriverMetricsCommand;
+import com.safecar.platform.devices.domain.model.commands.UpdateNumberOfDriverVehiclesCommand;
 import com.safecar.platform.devices.domain.services.DriverCommandService;
 import com.safecar.platform.devices.infrastructure.persistence.jpa.repositories.DriverRepository;
 import org.springframework.stereotype.Service;
@@ -28,12 +28,14 @@ public class DriverCommandServiceImpl implements DriverCommandService {
     }
 
     @Override
-    public Optional<Driver> handle(UpdateDriverMetricsCommand command, Long profileId) {
+    public Optional<Driver> handle(UpdateNumberOfDriverVehiclesCommand command) {
 
-        if (!driverRepository.existsByProfileId_ProfileId(profileId))
-            throw new IllegalArgumentException("Driver not found for profile ID: " + profileId);
+        var driverId = command.driverId();
 
-        var driver = driverRepository.findByProfileId_ProfileId(profileId)
+        if (!driverRepository.existsById(driverId))
+            throw new IllegalArgumentException("Driver not found for ID: " + driverId);
+
+        var driver = driverRepository.findById(driverId)
                 .orElseThrow();
 
         driver.updateTotalVehicles();

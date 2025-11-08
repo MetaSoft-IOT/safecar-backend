@@ -2,7 +2,7 @@ package com.safecar.platform.devices.domain.services;
 
 import com.safecar.platform.devices.domain.model.aggregates.Driver;
 import com.safecar.platform.devices.domain.model.commands.CreateDriverCommand;
-import com.safecar.platform.devices.domain.model.commands.UpdateDriverMetricsCommand;
+import com.safecar.platform.devices.domain.model.commands.UpdateNumberOfDriverVehiclesCommand;
 
 import java.util.Optional;
 
@@ -24,11 +24,10 @@ public interface DriverCommandService {
     Optional<Driver> handle(CreateDriverCommand command);
 
     /**
-     * Handles the update of driver metrics based on the provided command.
+     * Handles the update of the number of vehicles associated with a driver.
      * 
-     * @param command   the command containing driver metrics update details
-     * @param profileId the profile ID of the driver to be updated
+     * @param command the command containing driver ID and new vehicle count
      * @return an Optional containing the updated Driver, or empty if update failed
      */
-    Optional<Driver> handle(UpdateDriverMetricsCommand command, Long profileId);
+    Optional<Driver> handle(UpdateNumberOfDriverVehiclesCommand command);
 }
