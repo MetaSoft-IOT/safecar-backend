@@ -6,10 +6,43 @@ import org.springframework.stereotype.Repository;
 
 import java.util.Optional;
 
+/**
+ * Person Profile Repository JPA
+ * <p>
+ * JPA Repository interface for managing PersonProfile entities.
+ * </p>
+ */
 @Repository
 public interface PersonProfileRepository extends JpaRepository<PersonProfile, Long> {
+    /**
+     * Finds a PersonProfile by the associated user ID.
+     * 
+     * @param userId the user ID
+     * @return an Optional containing the found PersonProfile, or empty if not found
+     */
     Optional<PersonProfile> findByUserId(Long userId);
+
+    /**
+     * Checks if a PersonProfile exists for the given user ID.
+     * 
+     * @param userId the user ID
+     * @return true if a PersonProfile exists, false otherwise
+     */
     boolean existsByUserId(Long userId);
+
+    /**
+     * Checks if a PersonProfile exists with the given DNI.
+     * 
+     * @param dni the DNI
+     * @return true if a PersonProfile exists, false otherwise
+     */
     boolean existsByDni_Dni(String dni);
+
+    /**
+     * Checks if a PersonProfile exists with the given phone number.
+     * 
+     * @param phone the phone number
+     * @return true if a PersonProfile exists, false otherwise
+     */
     boolean existsByPhone_Phone(String phone);
 }

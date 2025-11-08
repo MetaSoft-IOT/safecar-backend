@@ -23,7 +23,7 @@ import java.util.stream.Collectors;
 @RequestMapping(value = "/api/v1/workshops", produces = MediaType.APPLICATION_JSON_VALUE)
 @RequiredArgsConstructor
 @Tag(name = "Workshop Operations", description = "Workshop operation endpoints")
-public class WorkshopOpsWorkshopsController {
+public class WorkshopOperationsController {
 
     private final WorkshopOperationCommandService commandService;
     private final WorkshopOperationQueryService queryService;

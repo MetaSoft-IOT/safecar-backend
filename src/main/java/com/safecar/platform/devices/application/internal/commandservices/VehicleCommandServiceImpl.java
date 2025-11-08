@@ -49,9 +49,10 @@ public class VehicleCommandServiceImpl implements VehicleCommandService {
                    command.driverId(), command.licensePlate());
 
         try {
-            // Validate that the driver exists through Profiles ACL before creating the vehicle
-            externalProfileService.validateDriverExists(command.driverId());
-            logger.debug("Driver validation successful for driverId: {}", command.driverId());
+            // Validate that the driver profile exists before creating the vehicle
+            if (!externalProfileService.validatePersonProfileExists(command.driverId())) {
+                throw new IllegalArgumentException("Driver profile not found for ID: " + command.driverId());
+            }
             
             // Check if a vehicle with the same license plate already exists
             if (vehicleRepository.existsByLicensePlate(command.licensePlate())) {

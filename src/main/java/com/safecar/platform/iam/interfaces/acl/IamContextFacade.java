@@ -1,5 +1,7 @@
 package com.safecar.platform.iam.interfaces.acl;
 
+import java.util.Set;
+
 /**
  * IamContextFacade
  * <p>
@@ -50,4 +52,14 @@ public interface IamContextFacade {
      * @return true if user exists, false otherwise
      */
     boolean validateUserExistsByEmail(String email);
+
+    /**
+     * fetchUserRolesByUserId
+     * <p>
+     *     This method is used to fetch the user roles by userId.
+     * </p>
+     * @param userId the userId of the user
+     * @return the set of role names (as strings) of the user if found, empty set otherwise
+     */
+    Set<String> fetchUserRolesByUserId(Long userId);
 }

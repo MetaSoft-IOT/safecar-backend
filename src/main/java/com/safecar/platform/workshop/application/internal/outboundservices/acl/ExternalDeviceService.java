@@ -3,8 +3,6 @@ package com.safecar.platform.workshop.application.internal.outboundservices.acl;
 import com.safecar.platform.devices.interfaces.acl.DevicesContextFacade;
 import com.safecar.platform.workshop.domain.model.valueobjects.VehicleId;
 
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 import org.springframework.stereotype.Service;
 
 import java.util.Optional;
@@ -17,10 +15,9 @@ import java.util.Optional;
  *     operations for the WorkshopOps bounded context.
  * </p>
  */
-@Service
+@Service("workshopExternalDeviceService")
 public class ExternalDeviceService {
 
-    private static final Logger logger = LoggerFactory.getLogger(ExternalDeviceService.class);
     
     private final DevicesContextFacade devicesContextFacade;
 
@@ -44,7 +41,6 @@ public class ExternalDeviceService {
         try {
             return devicesContextFacade.validateVehicleExists(vehicleId.vehicleId());
         } catch (Exception e) {
-            logger.error("Error validating vehicle existence for VehicleId {}: {}", vehicleId, e.getMessage());
             return false;
         }
     }
@@ -60,7 +56,6 @@ public class ExternalDeviceService {
         try {
             return devicesContextFacade.validateVehicleExistsByLicensePlate(licensePlate);
         } catch (Exception e) {
-            logger.error("Error validating vehicle existence for license plate {}: {}", licensePlate, e.getMessage());
             return false;
         }
     }
@@ -77,7 +72,6 @@ public class ExternalDeviceService {
             Long driverId = devicesContextFacade.fetchVehicleDriverId(vehicleId.vehicleId());
             return driverId != null && driverId > 0 ? Optional.of(driverId) : Optional.empty();
         } catch (Exception e) {
-            logger.error("Error fetching driver ID for vehicle {}: {}", vehicleId, e.getMessage());
             return Optional.empty();
         }
     }
@@ -92,7 +86,6 @@ public class ExternalDeviceService {
         try {
             return devicesContextFacade.fetchVehicleLicensePlate(vehicleId.vehicleId());
         } catch (Exception e) {
-            logger.error("Error fetching license plate for vehicle {}: {}", vehicleId, e.getMessage());
             return "";
         }
     }
@@ -107,7 +100,6 @@ public class ExternalDeviceService {
         try {
             return devicesContextFacade.fetchVehicleDetails(vehicleId.vehicleId());
         } catch (Exception e) {
-            logger.error("Error fetching vehicle details for ID {}: {}", vehicleId, e.getMessage());
             return "Unknown Vehicle";
         }
     }
@@ -124,8 +116,6 @@ public class ExternalDeviceService {
         try {
             return devicesContextFacade.validateDriverOwnsVehicle(vehicleId.vehicleId(), driverId);
         } catch (Exception e) {
-            logger.error("Error validating driver ownership for vehicle {} and driver {}: {}", 
-                        vehicleId, driverId, e.getMessage());
             return false;
         }
     }
@@ -140,7 +130,6 @@ public class ExternalDeviceService {
         try {
             return devicesContextFacade.validateVehicleExists(vehicleId);
         } catch (Exception e) {
-            logger.error("Error validating vehicle existence for ID {}: {}", vehicleId, e.getMessage());
             return false;
         }
     }
@@ -156,7 +145,6 @@ public class ExternalDeviceService {
             Long driverId = devicesContextFacade.fetchVehicleDriverId(vehicleId);
             return driverId != null && driverId > 0 ? Optional.of(driverId) : Optional.empty();
         } catch (Exception e) {
-            logger.error("Error fetching driver ID for vehicle {}: {}", vehicleId, e.getMessage());
             return Optional.empty();
         }
     }

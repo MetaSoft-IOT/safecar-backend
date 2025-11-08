@@ -1,5 +1,7 @@
 package com.safecar.platform.workshop.interfaces.acl;
 
+import java.util.List;
+
 /**
  * Anti-Corruption Layer (ACL) for Workshop Bounded Context.
  * 
@@ -13,11 +15,11 @@ public interface WorkshopContextFacade {
      *
      * @param profileId the ID of the PersonProfile from Profiles BC
      * @param companyName name of the workshop company
-     * @param specializations mechanic's technical specializations (optional)
+     * @param specializations mechanic's technical specializations as list (optional)
      * @param yearsOfExperience years of professional experience (optional)
      * @return the ID of the created mechanic, 0 if creation failed
      */
-    Long createMechanic(Long profileId, String companyName, String specializations, Integer yearsOfExperience);
+    Long createMechanic(Long profileId, String companyName, List<String> specializations, Integer yearsOfExperience);
 
     /**
      * Checks if a mechanic exists for the given profile ID.

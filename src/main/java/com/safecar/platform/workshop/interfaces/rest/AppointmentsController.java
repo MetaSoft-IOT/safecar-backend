@@ -26,8 +26,8 @@ import java.util.stream.Collectors;
 @RestController
 @RequestMapping(value = "/api/v1/workshops/{workshopId}/appointments", produces = MediaType.APPLICATION_JSON_VALUE)
 @RequiredArgsConstructor
-@Tag(name = "Workshop Appointments", description = "Workshop appointment management endpoints")
-public class WorkshopOpsAppointmentsController {
+@Tag(name = "Appointments", description = "Workshop appointment management endpoints")
+public class AppointmentsController {
 
     /**
      * Command and Query services for workshop appointments.

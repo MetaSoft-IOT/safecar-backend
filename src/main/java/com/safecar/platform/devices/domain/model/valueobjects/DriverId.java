@@ -15,6 +15,6 @@ import jakarta.validation.constraints.Positive;
 public record DriverId(@NotNull @Positive Long driverId) {
     
     public DriverId() {
-        this(0L); // Default value for JPA, will be set by the persistence layer
+        this(0L);
     }
 }

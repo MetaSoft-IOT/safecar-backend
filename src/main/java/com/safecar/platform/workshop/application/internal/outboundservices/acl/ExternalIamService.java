@@ -4,8 +4,6 @@ import com.safecar.platform.iam.interfaces.acl.IamContextFacade;
 import com.safecar.platform.workshop.domain.model.valueobjects.DriverId;
 import com.safecar.platform.workshop.domain.model.valueobjects.UserId;
 
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 import org.springframework.stereotype.Service;
 
 import java.util.Optional;
@@ -18,10 +16,9 @@ import java.util.Optional;
  *     operations for the WorkshopOps bounded context.
  * </p>
  */
-@Service
+@Service("workshopExternalIamService")
 public class ExternalIamService {
     
-    private static final Logger logger = LoggerFactory.getLogger(ExternalIamService.class);
     
     private final IamContextFacade iamContextFacade;
 
@@ -71,7 +68,6 @@ public class ExternalIamService {
         try {
             return iamContextFacade.validateUserExists(driverId);
         } catch (Exception e) {
-            logger.error("Error validating driver existence for ID {}: {}", driverId, e.getMessage());
             return false;
         }
     }
@@ -88,7 +84,6 @@ public class ExternalIamService {
         try {
             return iamContextFacade.validateUserExistsByEmail(email);
         } catch (Exception e) {
-            logger.error("Error validating driver existence for email {}: {}", email, e.getMessage());
             return false;
         }
     }
@@ -105,7 +100,6 @@ public class ExternalIamService {
         try {
             return iamContextFacade.fetchUserEmailByUserId(driverId);
         } catch (Exception e) {
-            logger.error("Error fetching driver email for ID {}: {}", driverId, e.getMessage());
             return "";
         }
     }
@@ -121,7 +115,6 @@ public class ExternalIamService {
         try {
             return iamContextFacade.validateUserExists(mechanicId);
         } catch (Exception e) {
-            logger.error("Error validating mechanic existence for ID {}: {}", mechanicId, e.getMessage());
             return false;
         }
     }
@@ -138,7 +131,6 @@ public class ExternalIamService {
         try {
             return iamContextFacade.fetchUserEmailByUserId(mechanicId);
         } catch (Exception e) {
-            logger.error("Error fetching mechanic email for ID {}: {}", mechanicId, e.getMessage());
             return "";
         }
     }
@@ -153,7 +145,6 @@ public class ExternalIamService {
         try {
             return iamContextFacade.validateUserExists(userId);
         } catch (Exception e) {
-            logger.error("Error validating user authentication for ID {}: {}", userId, e.getMessage());
             return false;
         }
     }
@@ -182,7 +173,6 @@ public class ExternalIamService {
             }
             return "User ID: " + userId;
         } catch (Exception e) {
-            logger.error("Error fetching user display info for ID {}: {}", userId, e.getMessage());
             return "Unknown User";
         }
     }

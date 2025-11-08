@@ -29,7 +29,7 @@ import java.util.stream.Collectors;
 @RequestMapping(value = "/api/v1/telemetry", produces = MediaType.APPLICATION_JSON_VALUE)
 @RequiredArgsConstructor
 @Tag(name = "Telemetry", description = "Vehicle telemetry endpoints")
-public class WorkshopOpsTelemetryController {
+public class TelemetriesController {
 
     /**
      * Command and Query services for vehicle telemetry.

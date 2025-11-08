@@ -1,10 +1,13 @@
 package com.safecar.platform.profiles.application.acl;
 
 import com.safecar.platform.profiles.domain.model.commands.CreatePersonProfileCommand;
+import com.safecar.platform.profiles.domain.model.queries.GetPersonProfileByIdQuery;
+import com.safecar.platform.profiles.domain.model.queries.GetPersonProfileByUserIdQuery;
 import com.safecar.platform.profiles.domain.services.PersonProfileCommandService;
 import com.safecar.platform.profiles.domain.services.PersonProfileQueryService;
 import com.safecar.platform.profiles.interfaces.acl.ProfilesContextFacade;
 import com.safecar.platform.shared.domain.model.aggregates.AuditableAbstractAggregateRoot;
+
 import org.springframework.stereotype.Service;
 
 /**
@@ -16,7 +19,6 @@ import org.springframework.stereotype.Service;
  */
 @Service
 public class ProfileContextFacadeImpl implements ProfilesContextFacade {
-    private final PersonProfileCommandService personProfileCommandService;
     private final PersonProfileQueryService personProfileQueryService;
 
     /**
@@ -27,36 +29,31 @@ public class ProfileContextFacadeImpl implements ProfilesContextFacade {
      * @param workshopMechanicCommandService workshop mechanic command service
      * @param workshopMechanicQueryService   workshop mechanic query service
      */
-    public ProfileContextFacadeImpl(PersonProfileCommandService personProfileCommandService,
-                                    PersonProfileQueryService personProfileQueryService) {
-        this.personProfileCommandService = personProfileCommandService;
+    public ProfileContextFacadeImpl(PersonProfileQueryService personProfileQueryService) {
         this.personProfileQueryService = personProfileQueryService;
     }
 
     // inherited javadoc
     @Override
-    public Long createPersonProfile(String fullName, String city, String country,
-                                    String phone, String dni, Long userId) {
-        var command = new CreatePersonProfileCommand(fullName, city, country, phone, dni);
-        var created = personProfileCommandService.handle(command, userId);
-        return created.map(AuditableAbstractAggregateRoot::getId).orElse(0L);
-    }
-
-    @Override
     public boolean existsPersonProfileByUserId(Long userId) {
-        var existing = personProfileQueryService.findByUserId(userId);
+        var getUserProfileQuery = new GetPersonProfileByUserIdQuery(userId);
+        var existing = personProfileQueryService.handle(getUserProfileQuery);
         return existing.isPresent();
     }
 
+    // inherited javadoc
     @Override
     public boolean existsPersonProfileById(Long profileId) {
-        var existing = personProfileQueryService.findById(profileId);
+        var getProfileByIdQuery = new GetPersonProfileByIdQuery(profileId);
+        var existing = personProfileQueryService.handle(getProfileByIdQuery);
         return existing.isPresent();
     }
 
+    // inherited javadoc
     @Override
     public Long getPersonProfileIdByUserId(Long userId) {
-        var person = personProfileQueryService.findByUserId(userId);
+        var getUserProfileQuery = new GetPersonProfileByUserIdQuery(userId);
+        var person = personProfileQueryService.handle(getUserProfileQuery);
         return person.map(AuditableAbstractAggregateRoot::getId).orElse(0L);
     }
 }

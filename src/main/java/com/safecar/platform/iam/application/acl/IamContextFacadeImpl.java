@@ -1,16 +1,20 @@
 package com.safecar.platform.iam.application.acl;
 
 import com.safecar.platform.iam.domain.model.queries.GetUserByEmailQuery;
+import com.safecar.platform.iam.domain.model.queries.GetUserByIdQuery;
 import com.safecar.platform.iam.domain.services.UserQueryService;
 import com.safecar.platform.iam.interfaces.acl.IamContextFacade;
 import org.springframework.stereotype.Service;
 
+import java.util.Set;
+import java.util.stream.Collectors;
+
 /**
  * IamContextFacadeImpl
  * <p>
- *     This class provides the implementation of the IamContextFacade interface.
- *     This class is used by other bounded contexts to interact with the IAM module
- *     for user validation and information retrieval.
+ * This class provides the implementation of the IamContextFacade interface.
+ * This class is used by other bounded contexts to interact with the IAM module
+ * for user validation and information retrieval.
  * </p>
  */
 @Service
@@ -20,6 +24,7 @@ public class IamContextFacadeImpl implements IamContextFacade {
 
     /**
      * Constructor
+     * 
      * @param userQueryService the {@link UserQueryService} user query service
      */
     public IamContextFacadeImpl(UserQueryService userQueryService) {
@@ -31,24 +36,27 @@ public class IamContextFacadeImpl implements IamContextFacade {
     public Long fetchUserIdByEmail(String email) {
         var getUserByEmailQuery = new GetUserByEmailQuery(email);
         var result = userQueryService.handle(getUserByEmailQuery);
-        if (result.isEmpty()) return 0L;
+        if (result.isEmpty())
+            return 0L;
         return result.get().getId();
     }
 
     // inherited javadoc
     @Override
     public String fetchUserEmailByUserId(Long userId) {
-        // TODO: IAM context needs GetUserByIdQuery implementation
-        // For now, return empty string as the query is not available
-        return "";
+        var getUserByIdQuery = new GetUserByIdQuery(userId);
+        var result = userQueryService.handle(getUserByIdQuery);
+        if (result.isEmpty())
+            return "";
+        return result.get().getEmail();
     }
 
     // inherited javadoc
     @Override
     public boolean validateUserExists(Long userId) {
-        // TODO: IAM context needs GetUserByIdQuery implementation
-        // For now, return false as the query is not available
-        return false;
+        var getUserByIdQuery = new GetUserByIdQuery(userId);
+        var result = userQueryService.handle(getUserByIdQuery);
+        return result.isPresent();
     }
 
     // inherited javadoc
@@ -57,5 +65,17 @@ public class IamContextFacadeImpl implements IamContextFacade {
         var getUserByEmailQuery = new GetUserByEmailQuery(email);
         var result = userQueryService.handle(getUserByEmailQuery);
         return result.isPresent();
+    }
+
+    // inherited javadoc
+    @Override
+    public Set<String> fetchUserRolesByUserId(Long userId) {
+        var getUserByIdQuery = new GetUserByIdQuery(userId);
+        var result = userQueryService.handle(getUserByIdQuery);
+
+        if (result.isEmpty())
+            return Set.of();
+
+        return result.get().getRolesAsStringSet();
     }
 }
