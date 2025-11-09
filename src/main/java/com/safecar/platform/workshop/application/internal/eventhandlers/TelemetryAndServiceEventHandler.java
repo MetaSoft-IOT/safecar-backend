@@ -39,9 +39,10 @@ public class TelemetryAndServiceEventHandler {
         
         // Business logic: Real-time telemetry analysis and anomaly detection
         var sample = event.sample();
-        LOGGER.debug("Telemetry ingested - Vehicle: {}, Type: {}, Severity: {}, Speed: {} km/h", 
+        var speed = sample.speed() != null ? sample.speed().value() : null;
+        LOGGER.debug("Telemetry ingested - Vehicle: {}, Type: {}, Severity: {}, Speed: {}", 
                     sample.vehicleId().vehicleId(), sample.type(), 
-                    sample.severity(), sample.speed().value());
+                    sample.severity(), speed != null ? speed + " km/h" : "n/a");
         
         // Real-time safety analysis
         if (isUrgentTelemetryData(event)) {
@@ -64,6 +65,27 @@ public class TelemetryAndServiceEventHandler {
                        sample.vehicleId().vehicleId(), sample.type(), sample.location());
             
             // TODO: Integrate with Predictive BC for maintenance scheduling
+        }
+
+        if (sample.tirePressure() != null && hasCriticalTirePressure(sample.tirePressure())) {
+            LOGGER.warn("⚠️ Tire pressure imbalance detected on vehicle {}. Pressure snapshot: FL={} FR={} RL={} RR={}",
+                    sample.vehicleId().vehicleId(),
+                    sample.tirePressure().frontLeft(),
+                    sample.tirePressure().frontRight(),
+                    sample.tirePressure().rearLeft(),
+                    sample.tirePressure().rearRight());
+        }
+
+        if (sample.cabinGasLevel() != null && isToxicGas(sample.cabinGasLevel())) {
+            LOGGER.error("☣️ Cabin gas alert for vehicle {}: {} concentration {} ppm",
+                    sample.vehicleId().vehicleId(),
+                    sample.cabinGasLevel().type(),
+                    sample.cabinGasLevel().concentrationPpm());
+        }
+
+        if (sample.accelerationVector() != null && sample.accelerationVector().isHarshEvent()) {
+            LOGGER.info("🌀 Driving behavior event detected on vehicle {} with accel vector {}", 
+                    sample.vehicleId().vehicleId(), sample.accelerationVector());
         }
     }
 
@@ -135,6 +157,29 @@ public class TelemetryAndServiceEventHandler {
         // Check for performance-related telemetry types and moderate severity
         return sample.severity().name().equals("MEDIUM") || 
                (sample.type().name().equals("ENGINE") && sample.severity().name().equals("LOW"));
+    }
+
+    private boolean hasCriticalTirePressure(com.safecar.platform.workshop.domain.model.valueobjects.TirePressure pressure) {
+        if (pressure == null) return false;
+        var readings = new java.math.BigDecimal[] {
+                pressure.frontLeft(), pressure.frontRight(), pressure.rearLeft(), pressure.rearRight()
+        };
+        java.math.BigDecimal min = null;
+        java.math.BigDecimal max = null;
+        for (var value : readings) {
+            if (value == null) continue;
+            min = (min == null || value.compareTo(min) < 0) ? value : min;
+            max = (max == null || value.compareTo(max) > 0) ? value : max;
+            if (value.compareTo(java.math.BigDecimal.valueOf(25)) < 0 ||
+                value.compareTo(java.math.BigDecimal.valueOf(45)) > 0) {
+                return true;
+            }
+        }
+        return min != null && max != null && max.subtract(min).compareTo(java.math.BigDecimal.valueOf(6)) > 0;
+    }
+
+    private boolean isToxicGas(com.safecar.platform.workshop.domain.model.valueobjects.CabinGasLevel cabinGasLevel) {
+        return cabinGasLevel.concentrationPpm().compareTo(java.math.BigDecimal.valueOf(800)) > 0;
     }
 
     /**

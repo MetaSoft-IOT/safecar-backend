@@ -199,6 +199,61 @@ curl -X POST http://localhost:8080/api/v1/vehicles \
 }
 ```
 
+---
+
+### 🤖 **4. Analíticas de Telemetría con OpenAI (Insights BC)**
+
+El nuevo **bounded context Insights** toma lecturas avanzadas de sensores (presión de llantas, gas en cabina, GPS y acelerómetros) provenientes del agregado `VehicleTelemetry` del Workshop BC y genera:
+
+- 📈 **Analíticas de mantenimiento predictivo**
+- 🚦 **Recomendaciones de hábitos de conducción**
+- 📡 **Eventos internos** `VehicleInsightGeneratedEvent`
+- 🌐 **API REST** para disparar análisis on-demand
+
+#### 📡 Evento Automático
+Cada vez que se ingiere un `TelemetrySample` con severidad crítica o anomalías en neumáticos/gases/aceleraciones, se ejecuta un comando `GenerateVehicleInsightCommand` y se invoca OpenAI.
+
+#### 🌐 Endpoint REST
+```
+POST /api/v1/insights/vehicle
+```
+
+```bash
+curl -X POST http://localhost:8080/api/v1/insights/vehicle \
+  -H "Content-Type: application/json" \
+  -d '{
+    "driverId": 1,
+    "driverFullName": "Juan Pérez",
+    "vehicleId": 10,
+    "plateNumber": "ABC-123",
+    "capturedAt": "2024-05-01T10:15:30Z",
+    "severity": "WARN",
+    "speedKmh": 68.5,
+    "location": {"latitude": -12.04, "longitude": -77.03},
+    "tirePressure": {"frontLeft": 31.5, "frontRight": 34.2, "rearLeft": 33.9, "rearRight": 33.5},
+    "cabinGas": {"type": "CO2", "ppm": 730},
+    "acceleration": {"lateralG": 0.45, "longitudinalG": -0.8, "verticalG": 0.05}
+  }'
+```
+
+**Respuesta:**
+```json
+{
+  "insightId": 5,
+  "riskLevel": "HIGH",
+  "maintenanceSummary": "Revisar neumáticos delanteros y filtro de cabina",
+  "drivingSummary": "Frenadas bruscas frecuentes",
+  "drivingScore": 62,
+  "recommendations": [
+    {"title": "Balanceo y alineación", "detail": "Programar en los próximos 3 días"},
+    {"title": "Técnica de frenado", "detail": "Anticipar tráfico y reducir acelerones"}
+  ],
+  "generatedAt": "2024-05-01T10:15:31Z"
+}
+```
+
+> **Configura tu API key de OpenAI** con `OPENAI_API_KEY` y ajusta el modelo/endpoint en `application.properties` (`insights.openai.*`).
+
 **Registrar Segundo Vehículo:**
 ```bash
 curl -X POST http://localhost:8080/api/v1/vehicles \

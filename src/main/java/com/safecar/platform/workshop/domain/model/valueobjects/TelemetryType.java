@@ -7,5 +7,8 @@ public enum TelemetryType {
     SPEED,
     LOCATION,
     DTC,
-    ALERT
+    ALERT,
+    TIRE_PRESSURE,
+    CABIN_GAS,
+    ACCELERATION
 }
