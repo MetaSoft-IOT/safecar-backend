@@ -6,17 +6,14 @@ import org.slf4j.LoggerFactory;
 import org.springframework.context.event.EventListener;
 import org.springframework.stereotype.Service;
 
-import com.safecar.platform.workshop.domain.model.events.ServiceBayAllocatedEvent;
 import com.safecar.platform.workshop.domain.model.events.TelemetryFlushedEvent;
 import com.safecar.platform.workshop.domain.model.events.TelemetrySampleIngestedEvent;
 
-import java.sql.Timestamp;
-
 /**
- * Event handler for Telemetry and Service Bay related events.
+ * Event handler for Telemetry related events.
  * <p>
- *     These events are triggered when telemetry samples are ingested, flushed,
- *     or service bays are allocated. Used for monitoring and integration.
+ *     These events are triggered when telemetry samples are ingested or flushed.
+ *     Used for real-time monitoring, analysis, and integration with other bounded contexts.
  * </p>
  */
 @Service
@@ -89,27 +86,7 @@ public class TelemetryAndServiceEventHandler {
         // TODO: Integrate with Reporting BC for performance analytics
     }
 
-    /**
-     * Event listener for ServiceBayAllocatedEvent.
-     * <p>
-     *     This method is triggered when a service bay is allocated.
-     * </p>
-     *
-     * @param event the {@link ServiceBayAllocatedEvent} event.
-     */
-    @EventListener
-    public void on(ServiceBayAllocatedEvent event) {
-        LOGGER.info("Service bay allocated with ID {} for workshop {} with label {} at {}", 
-                   event.serviceBayId(), event.workshopId(), event.label(), currentTimestamp());
-        
-        // Business logic: Resource allocation and capacity management
-        LOGGER.info("🔧 SERVICE BAY ALLOCATED: Bay '{}' ready for operations at workshop {}", 
-                   event.label(), event.workshopId());
-        
-        // TODO: Integrate with Resources BC for capacity tracking and optimization
-        // TODO: Integrate with Scheduling BC for bay availability management
-        // TODO: Update workshop operational metrics and utilization rates
-    }
+
 
     /**
      * Check if telemetry data indicates urgent issues.
@@ -137,12 +114,5 @@ public class TelemetryAndServiceEventHandler {
                (sample.type().name().equals("ENGINE") && sample.severity().name().equals("LOW"));
     }
 
-    /**
-     * Get the current timestamp.
-     *
-     * @return the current timestamp.
-     */
-    private Timestamp currentTimestamp() {
-        return new Timestamp(System.currentTimeMillis());
-    }
+
 }

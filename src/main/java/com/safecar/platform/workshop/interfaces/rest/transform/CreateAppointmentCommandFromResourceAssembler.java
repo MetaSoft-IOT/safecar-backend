@@ -18,9 +18,9 @@ public class CreateAppointmentCommandFromResourceAssembler {
      * @return the create appointment command
      */
     public static CreateAppointmentCommand toCommandFromResource(CreateAppointmentResource resource) {
-        var workshopId = new WorkshopId(resource.workshopId(), "Workshop " + resource.workshopId());
-        var vehicleId = new VehicleId(resource.vehicleId(), "PLATE-" + resource.vehicleId());
-        var driverId = new DriverId(resource.driverId(), "Driver " + resource.driverId());
+        var workshopId = new WorkshopId(resource.workshopId());
+        var vehicleId = new VehicleId(resource.vehicleId());
+        var driverId = new DriverId(resource.driverId());
         var slot = new ServiceSlot(resource.startAt(), resource.endAt());
 
         return new CreateAppointmentCommand(

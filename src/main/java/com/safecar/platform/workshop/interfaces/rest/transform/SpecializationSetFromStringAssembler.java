@@ -27,7 +27,7 @@ public class SpecializationSetFromStringAssembler {
         }
         
         return resourceSet.stream()
-                .filter(name -> name != null && !name.trim().isEmpty()) // Filter out null or empty strings
+                .filter(name -> name != null && !name.trim().isEmpty())
                 .map(Specialization::toSpecializationFromName)
                 .collect(Collectors.toSet());
     }

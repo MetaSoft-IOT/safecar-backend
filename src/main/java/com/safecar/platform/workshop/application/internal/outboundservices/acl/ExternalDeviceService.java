@@ -150,14 +150,12 @@ public class ExternalDeviceService {
     }
 
     /**
-     * Convenience method to create VehicleId from Long ID and plate.
-     * Used when we have both vehicle ID and plate number.
+     * Convenience method to create VehicleId from Long ID.
      *
      * @param vehicleId the vehicle ID as Long
-     * @param plateNumber the vehicle plate number
      * @return VehicleId value object
      */
-    public VehicleId createVehicleId(Long vehicleId, String plateNumber) {
-        return new VehicleId(vehicleId, plateNumber);
+    public VehicleId createVehicleId(Long vehicleId) {
+        return new VehicleId(vehicleId);
     }
 }

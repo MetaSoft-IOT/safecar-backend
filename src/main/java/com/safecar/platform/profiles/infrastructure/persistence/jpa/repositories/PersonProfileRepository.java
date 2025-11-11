@@ -15,20 +15,20 @@ import java.util.Optional;
 @Repository
 public interface PersonProfileRepository extends JpaRepository<PersonProfile, Long> {
     /**
-     * Finds a PersonProfile by the associated user ID.
+     * Finds a PersonProfile by the associated user email.
      * 
-     * @param userId the user ID
+     * @param userEmail the user email
      * @return an Optional containing the found PersonProfile, or empty if not found
      */
-    Optional<PersonProfile> findByUserId(Long userId);
+    Optional<PersonProfile> findByUserEmail(String userEmail);
 
     /**
-     * Checks if a PersonProfile exists for the given user ID.
+     * Checks if a PersonProfile exists for the given user email.
      * 
-     * @param userId the user ID
+     * @param userEmail the user email
      * @return true if a PersonProfile exists, false otherwise
      */
-    boolean existsByUserId(Long userId);
+    boolean existsByUserEmail(String userEmail);
 
     /**
      * Checks if a PersonProfile exists with the given DNI.

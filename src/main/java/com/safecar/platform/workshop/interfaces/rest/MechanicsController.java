@@ -19,7 +19,7 @@ import io.swagger.v3.oas.annotations.tags.Tag;
 
 @RestController
 @RequestMapping(value = "/api/v1/mechanic-profiles", produces = MediaType.APPLICATION_JSON_VALUE)
-@Tag(name = "Mechanic Profiles", description = "Mechanic management endpoints")
+@Tag(name = "Mechanics", description = "Mechanic management endpoints")
 public class MechanicsController {
 
     private final MechanicCommandService commandService;

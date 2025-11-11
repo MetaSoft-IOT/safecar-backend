@@ -3,14 +3,11 @@ package com.safecar.platform.workshop.domain.services;
 import com.safecar.platform.workshop.domain.model.commands.SeedSpecializationsCommand;
 
 /**
- * Service interface for Specialization command operations.
+ * Specialization Command Service
  * <p>
- * This interface defines the contract for handling specialization-related commands.
+ * Handles commands related to specializations within the workshop domain.
  * </p>
  * 
- * @author SafeCar Platform Team
- * @version 1.0
- * @since 2025-11-07
  */
 public interface SpecializationCommandService {
 

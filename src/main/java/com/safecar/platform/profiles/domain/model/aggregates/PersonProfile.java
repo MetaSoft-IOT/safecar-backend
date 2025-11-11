@@ -1,6 +1,5 @@
 package com.safecar.platform.profiles.domain.model.aggregates;
 
-
 import com.safecar.platform.profiles.domain.model.commands.CreatePersonProfileCommand;
 import com.safecar.platform.profiles.domain.model.valueobjects.Dni;
 import com.safecar.platform.profiles.domain.model.valueobjects.Phone;
@@ -9,8 +8,6 @@ import com.safecar.platform.shared.domain.model.aggregates.AuditableAbstractAggr
 import jakarta.persistence.Embedded;
 import jakarta.persistence.Entity;
 import jakarta.validation.constraints.NotBlank;
-import jakarta.validation.constraints.NotNull;
-import jakarta.validation.constraints.Positive;
 import lombok.Getter;
 import lombok.Setter;
 
@@ -27,11 +24,10 @@ import lombok.Setter;
 public class PersonProfile extends AuditableAbstractAggregateRoot<PersonProfile> {
 
     /**
-     * User ID associated with this profile - Has to be positive and not null
+     * User email associated with this profile - Cannot be blank
      */
-    @NotNull
-    @Positive
-    private Long userId;
+    @NotBlank
+    private String userEmail;
 
     /**
      * Full name of the person - Cannot be blank
@@ -70,13 +66,13 @@ public class PersonProfile extends AuditableAbstractAggregateRoot<PersonProfile>
     }
 
     /**
-     * Constructor to create PersonProfile from command and userId
+     * Constructor to create PersonProfile from command and userEmail
      * 
-     * @param command the create person profile command
-     * @param userId  the associated user ID
+     * @param command   the create person profile command
+     * @param userEmail the associated user email
      */
-    public PersonProfile(CreatePersonProfileCommand command, Long userId) {
-        this.userId = userId;
+    public PersonProfile(CreatePersonProfileCommand command, String userEmail) {
+        this.userEmail = userEmail;
         this.fullName = command.fullName();
         this.city = command.city();
         this.country = command.country();
@@ -87,15 +83,15 @@ public class PersonProfile extends AuditableAbstractAggregateRoot<PersonProfile>
     /**
      * Constructor with all fields
      * 
-     * @param userId   the user ID
-     * @param fullName the full name of the person
-     * @param city     the city of residence
-     * @param country  the country of residence
-     * @param phone    the phone value object
-     * @param dni      the dni value object
+     * @param userEmail the user email
+     * @param fullName  the full name of the person
+     * @param city      the city of residence
+     * @param country   the country of residence
+     * @param phone     the phone value object
+     * @param dni       the dni value object
      */
-    public PersonProfile(Long userId, String fullName, String city, String country, Phone phone, Dni dni) {
-        this.userId = userId;
+    public PersonProfile(String userEmail, String fullName, String city, String country, Phone phone, Dni dni) {
+        this.userEmail = userEmail;
         this.fullName = fullName;
         this.city = city;
         this.country = country;
@@ -119,5 +115,26 @@ public class PersonProfile extends AuditableAbstractAggregateRoot<PersonProfile>
      */
     public String getDniNumber() {
         return dni.dni();
+    }
+
+    /**
+     * Update person profile metrics
+     * @param fullName the full name of the person
+     * @param city the city of residence
+     * @param country the country of residence
+     * @param phone the phone value object
+     * @param dni the dni value object
+     */
+    public void updatePersonProfileMetrics(
+            String fullName,
+            String city,
+            String country,
+            Phone phone,
+            Dni dni) {
+        this.fullName = fullName;
+        this.city = city;
+        this.country = country;
+        this.phone = phone;
+        this.dni = dni;
     }
 }

@@ -75,7 +75,6 @@ public class TelemetriesController {
      * Get telemetry records for vehicle in range.
      * 
      * @param vehicleId   The ID of the vehicle.
-     * @param plateNumber The plate number of the vehicle.
      * @param from        The start time of the range.
      * @param to          The end time of the range.
      * @return A list of telemetry records for the vehicle in the specified range.
@@ -83,8 +82,8 @@ public class TelemetriesController {
     @GetMapping
     @Operation(summary = "Get telemetry records for vehicle in range")
     public ResponseEntity<List<TelemetryRecordResource>> getTelemetryByVehicleAndRange(@RequestParam Long vehicleId,
-            @RequestParam String plateNumber, @RequestParam Instant from, @RequestParam Instant to) {
-        var vehicle = new com.safecar.platform.workshop.domain.model.valueobjects.VehicleId(vehicleId, plateNumber);
+            @RequestParam Instant from, @RequestParam Instant to) {
+        var vehicle = new com.safecar.platform.workshop.domain.model.valueobjects.VehicleId(vehicleId);
         var query = new GetTelemetryByVehicleAndRangeQuery(vehicle, from, to);
         var records = queryService.handle(query);
         var resources = records.stream().map(TelemetryRecordResourceFromEntityAssembler::toResourceFromEntity)

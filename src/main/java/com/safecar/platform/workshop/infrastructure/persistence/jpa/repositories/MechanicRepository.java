@@ -6,9 +6,32 @@ import org.springframework.stereotype.Repository;
 
 import java.util.Optional;
 
+/**
+ * Mechanic Repository - JPA Repository for Mechanic entities.
+ */
 @Repository
 public interface MechanicRepository extends JpaRepository<Mechanic, Long> {
+    /**
+     * Finds a Mechanic by their associated profile ID.
+     * 
+     * @param profileId the profile ID to search for
+     * @return an Optional containing the found Mechanic, or empty if not found
+     */
     Optional<Mechanic> findByProfileId_ProfileId(Long profileId);
+
+    /**
+     * Checks if a Mechanic exists by their associated profile ID.
+     * 
+     * @param profileId the profile ID to check for
+     * @return true if the Mechanic exists, false otherwise
+     */
     boolean existsByProfileId_ProfileId(Long profileId);
+
+    /**
+     * Checks if a Mechanic exists by their company name.
+     * 
+     * @param companyName the company name to check for
+     * @return true if the Mechanic exists, false otherwise
+     */
     boolean existsByCompanyName(String companyName);
 }

@@ -18,9 +18,9 @@ public class CreateWorkOrderCommandFromResourceAssembler {
      * @return OpenWorkOrderCommand
      */
     public static OpenWorkOrderCommand toCommandFromResource(CreateWorkOrderResource resource) {
-        var workshopId = new WorkshopId(resource.workshopId(), "Workshop " + resource.workshopId());
-        var vehicleId = new VehicleId(resource.vehicleId(), "PLATE-" + resource.vehicleId());
-        var driverId = new DriverId(resource.driverId(), "Driver " + resource.driverId());
+        var workshopId = new WorkshopId(resource.workshopId());
+        var vehicleId = new VehicleId(resource.vehicleId());
+        var driverId = new DriverId(resource.driverId());
         var code = new WorkOrderCode(resource.code(), resource.workshopId());
         var openedAt = resource.openedAt() == null ? Instant.now() : resource.openedAt();
 

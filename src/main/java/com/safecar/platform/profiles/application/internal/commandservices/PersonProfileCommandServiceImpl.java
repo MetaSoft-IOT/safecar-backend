@@ -3,11 +3,14 @@ package com.safecar.platform.profiles.application.internal.commandservices;
 import com.safecar.platform.profiles.application.internal.outbounceservices.acl.ExternalIamService;
 import com.safecar.platform.profiles.domain.model.aggregates.PersonProfile;
 import com.safecar.platform.profiles.domain.model.commands.CreatePersonProfileCommand;
+import com.safecar.platform.profiles.domain.model.commands.UpdatePersonProfileCommand;
 import com.safecar.platform.profiles.domain.model.valueobjects.Dni;
 import com.safecar.platform.profiles.domain.model.valueobjects.Phone;
 import com.safecar.platform.profiles.domain.services.PersonProfileCommandService;
 import com.safecar.platform.profiles.infrastructure.persistence.jpa.repositories.PersonProfileRepository;
-import com.safecar.platform.shared.domain.model.events.PersonProfileCreatedEvent;
+import com.safecar.platform.shared.domain.model.events.ProfileCreatedEvent;
+
+import java.util.Optional;
 
 import org.springframework.context.ApplicationEventPublisher;
 import org.springframework.stereotype.Service;
@@ -41,37 +44,53 @@ public class PersonProfileCommandServiceImpl implements PersonProfileCommandServ
         this.externalIamService = externalIamService;
     }
 
-    /**
-     * Handles the creation of a new PersonProfile.
-     * <p>
-     * Publishes a {@link PersonProfileCreatedEvent} after successful creation.
-     * </p>
-     * 
-     * @param command the {@link CreatePersonProfileCommand} instance
-     * @return the created {@link PersonProfile} instance
-     */
+    // javadoc inherited
     @Transactional
     @Override
-    public PersonProfile handle(CreatePersonProfileCommand command, Long userId) {
+    public Optional<PersonProfile> handle(CreatePersonProfileCommand command, String userEmail) {
 
-        var userRoles = externalIamService.fetchUserRolesByUserId(userId);
+        var userRoles = externalIamService.fetchUserRolesByUserEmail(userEmail);
 
         var profile = new PersonProfile(
-                userId,
+                userEmail,
                 command.fullName(),
                 command.city(),
                 command.country(),
                 new Phone(command.phone()),
                 new Dni(command.dni()));
 
-        var savedProfile = personProfileRepository.save(profile);
+        var saved = personProfileRepository.save(profile);
 
-        var event = new PersonProfileCreatedEvent(
-                savedProfile.getId(),
+        var event = new ProfileCreatedEvent(
+                saved.getId(),
                 userRoles);
 
         applicationEventPublisher.publishEvent(event);
 
-        return savedProfile;
+        return Optional.of(saved);
+    }
+
+    // javadoc inherited
+    @Transactional
+    @Override
+    public Optional<PersonProfile> handle(UpdatePersonProfileCommand command, Long personProfileId) {
+
+        var personProfile = personProfileRepository.findById(personProfileId);
+
+        if (!personProfile.isPresent())
+            throw new IllegalArgumentException("PersonProfile with id " + command.personId() + " not found");
+
+        var entity = personProfile.get();
+
+        entity.updatePersonProfileMetrics(
+                command.fullName(),
+                command.city(),
+                command.country(),
+                command.phone(),
+                command.dni());
+
+        var updated = personProfileRepository.save(entity);
+
+        return Optional.of(updated);
     }
 }

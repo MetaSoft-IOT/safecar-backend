@@ -54,17 +54,31 @@ public class ExternalProfileService {
     }
 
     /**
-     * Get person profile ID by user ID
+     * Get person profile ID by user email
      * 
-     * @param userId The user ID
+     * @param userEmail The user email
      * @return The profile ID, or null if not found
      */
-    public Long getPersonProfileIdByUserId(Long userId) {
+    public Long getPersonProfileIdByUserEmail(String userEmail) {
         try {
-            Long profileId = profilesContextFacade.getPersonProfileIdByUserId(userId);
+            Long profileId = profilesContextFacade.getPersonProfileIdByUserEmail(userEmail);
             return profileId > 0 ? profileId : null;
         } catch (Exception e) {
             return null;
+        }
+    }
+
+    /**
+     * Validate if a person profile exists by user email
+     * 
+     * @param userEmail The user email to validate
+     * @return true if profile exists, false otherwise
+     */
+    public boolean validatePersonProfileExistsByUserEmail(String userEmail) {
+        try {
+            return profilesContextFacade.existsPersonProfileByUserEmail(userEmail);
+        } catch (Exception e) {
+            return false;
         }
     }
 }

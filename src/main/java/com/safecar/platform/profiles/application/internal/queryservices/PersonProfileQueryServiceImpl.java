@@ -2,7 +2,7 @@ package com.safecar.platform.profiles.application.internal.queryservices;
 
 import com.safecar.platform.profiles.domain.model.aggregates.PersonProfile;
 import com.safecar.platform.profiles.domain.model.queries.GetPersonProfileByIdQuery;
-import com.safecar.platform.profiles.domain.model.queries.GetPersonProfileByUserIdQuery;
+import com.safecar.platform.profiles.domain.model.queries.GetPersonProfileByUserEmailQuery;
 import com.safecar.platform.profiles.domain.services.PersonProfileQueryService;
 import com.safecar.platform.profiles.infrastructure.persistence.jpa.repositories.PersonProfileRepository;
 import org.springframework.stereotype.Service;
@@ -18,8 +18,8 @@ public class PersonProfileQueryServiceImpl implements PersonProfileQueryService 
     }
 
     @Override
-    public Optional<PersonProfile> handle(GetPersonProfileByUserIdQuery query) {
-        return personProfileRepository.findByUserId(query.userId());
+    public Optional<PersonProfile> handle(GetPersonProfileByUserEmailQuery query) {
+        return personProfileRepository.findByUserEmail(query.userEmail());
     }
 
     @Override

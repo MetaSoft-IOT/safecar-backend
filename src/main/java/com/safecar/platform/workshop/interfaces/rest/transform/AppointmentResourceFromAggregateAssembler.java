@@ -2,7 +2,7 @@ package com.safecar.platform.workshop.interfaces.rest.transform;
 
 import java.util.stream.Collectors;
 
-import com.safecar.platform.workshop.domain.model.aggregates.WorkshopAppointment;
+import com.safecar.platform.workshop.domain.model.aggregates.Appointment;
 import com.safecar.platform.workshop.interfaces.rest.resources.AppointmentResource;
 
 /**
@@ -12,13 +12,13 @@ import com.safecar.platform.workshop.interfaces.rest.resources.AppointmentResour
 public class AppointmentResourceFromAggregateAssembler {
 
     /**
-     * Converts a {@link WorkshopAppointment} aggregate to an
+     * Converts a {@link Appointment} aggregate to an
      * {@link AppointmentResource}.
      *
      * @param aggregate the workshop appointment aggregate
      * @return the appointment resource
      */
-    public static AppointmentResource toResourceFromAggregate(WorkshopAppointment aggregate) {
+    public static AppointmentResource toResourceFromAggregate(Appointment aggregate) {
         var notes = aggregate.getNotes().stream()
                 .map(AppointmentNoteResourceFromEntityAssembler::toResourceFromEntity)
                 .collect(Collectors.toList());
@@ -28,7 +28,7 @@ public class AppointmentResourceFromAggregateAssembler {
                 aggregate.getWorkshop().workshopId(),
                 aggregate.getVehicle().vehicleId(),
                 aggregate.getDriver().driverId(),
-                aggregate.getWorkOrderId(),
+                aggregate.getServiceOrderId(),
                 aggregate.getScheduledAt().startAt(),
                 aggregate.getScheduledAt().endAt(),
                 aggregate.getStatus().name(),
