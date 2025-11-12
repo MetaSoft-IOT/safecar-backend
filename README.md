@@ -20,7 +20,7 @@ SafeCar Backend Platform is a comprehensive IoT vehicle telemetry and workshop m
 - Predictive Maintenance Alerts
 
 ## Bounded Contexts
-This version of SafeCar Backend Platform is divided into four main bounded contexts: IAM, Profiles, Devices, and Workshop, plus a Shared context for common infrastructure.
+This version of SafeCar Backend Platform is divided into five main bounded contexts: IAM, Profiles, Devices, Workshop, and Payments, plus a Shared context for common infrastructure.
 
 ### Identity and Access Management (IAM) Context
 
@@ -97,6 +97,23 @@ The Workshop Context processes telemetry samples including:
 - Predictive maintenance triggers
 - Real-time vehicle health monitoring
 
+### Payments Context
+
+The Payments Context is responsible for managing subscription billing through Stripe integration. This context handles payment processing, subscription lifecycle management, and plan limitations enforcement. Its features include:
+
+- Create Stripe checkout sessions for subscription plans (BASIC, PROFESSIONAL, PREMIUM).
+- Handle Stripe webhook events for subscription lifecycle.
+- Manage subscription records linked to workshop owners.
+- Enforce plan-based limitations (e.g., maximum number of mechanics per plan).
+- Integration with Stripe API for secure payment processing.
+
+The Payments Context provides the following subscription plans:
+- **BASIC**: Up to 3 mechanics per workshop
+- **PROFESSIONAL**: Up to 10 mechanics per workshop
+- **PREMIUM**: Up to 30 mechanics per workshop
+
+This context operates independently with minimal coupling to other bounded contexts, following the principle of separation of concerns. Payment processing is handled entirely through Stripe's secure infrastructure, and subscription data is stored locally for plan enforcement.
+
 ### Shared Context
 
 The Shared Context provides common infrastructure components, domain model elements, and cross-cutting concerns used by all other bounded contexts. It includes:
@@ -116,11 +133,38 @@ The Shared Context provides common infrastructure components, domain model eleme
 ### Database Configuration
 ```properties
 # src/main/resources/application.properties
-spring.datasource.url=jdbc:mysql://localhost:3306/safecar_db
-spring.datasource.username=your_username
-spring.datasource.password=your_password
+spring.datasource.url=jdbc:mysql://localhost:3306/safecar-db
+spring.datasource.username=${MYSQL_ROOT_USER}
+spring.datasource.password=${MYSQL_ROOT_PASSWORD}
 spring.jpa.hibernate.ddl-auto=update
-spring.jpa.hibernate.naming.physical-strategy=org.hibernate.boot.model.naming.CamelCaseToUnderscoresNamingStrategy
+spring.jpa.hibernate.naming.physical-strategy=com.safecar.platform.shared.infrastructure.persistence.jpa.configuration.strategy.SnakeCaseWithPluralizedTablePhysicalNamingStrategy
+```
+
+### Stripe Payment Configuration
+```properties
+# Stripe API Configuration
+stripe.secret-key=${STRIPE_SECRET_KEY:sk_test_default_key}
+stripe.webhook-secret=${STRIPE_WEBHOOK_SECRET:whsec_test_default}
+
+# Frontend URL for payment redirects
+app.frontend-url=${FRONTEND_URL:http://localhost:8081}
+
+# Plan pricing (configured in Stripe Dashboard)
+plans.basic.price-id=price_1SQbsT3l890Fc29CerlSwh4r
+plans.professional.price-id=price_1SQbt23l890Fc29CqoqLYCnu
+plans.premium.price-id=price_1SQbtK3l890Fc29COSEZ6iK4
+
+# Plan mechanic limits
+plans.basic.mechanics-limit=3
+plans.professional.mechanics-limit=10
+plans.premium.mechanics-limit=30
+```
+
+**Required Environment Variables for Payments:**
+```bash
+export STRIPE_SECRET_KEY=sk_test_51...  # Your Stripe secret key (test mode)
+export STRIPE_WEBHOOK_SECRET=whsec_test_...  # Stripe webhook signing secret
+export FRONTEND_URL=http://localhost:8081  # Optional, defaults shown above
 ```
 
 ### Running the Application
@@ -947,6 +991,323 @@ curl -X POST http://localhost:8080/api/v1/telemetry \
 | | BusinessProfiles | `/api/v1/business-profiles` | 3 |
 | **Devices** | Vehicles | `/api/v1/` | 3 |
 | **Workshop** | Workshops | `/api/v1/workshops` | 2 |
+| | Mechanics | `/api/v1/mechanics` | 2 |
+| | Appointments | `/api/v1/workshops/{id}/appointments` | 9 |
+| | Telemetry | `/api/v1/telemetry` | 6 |
+| **Payments** | Payments | `/api/v1/payments` | 3 |
+| | Webhooks | `/webhooks/stripe` | 1 |
+
+---
+
+## 💳 **FLUJO 6: Gestión de Pagos y Suscripciones (Payments Context)**
+
+Este flujo demuestra la integración con Stripe para gestionar suscripciones de talleres.
+
+### **6.1. Verificar Sistema de Pagos (Debug)**
+
+```bash
+# ============================================================
+# PASO 1: Verificar que el sistema de pagos esté funcionando
+# ============================================================
+curl -X GET http://localhost:8080/api/v1/payments/debug
+
+# Respuesta esperada:
+# {
+#   "status": "Payment controller is working",
+#   "timestamp": "2025-11-12T04:45:00",
+#   "testUserId": "31303200000000000000000000000000",
+#   "availablePlans": ["BASIC", "PROFESSIONAL", "PREMIUM"],
+#   "testResponse": {
+#     "sessionId": "debug-session-123",
+#     "class": "com.safecar.platform.payments.application.dtos.CheckoutSessionResponse"
+#   }
+# }
+```
+
+### **6.2. Crear Sesión de Checkout (Testing)**
+
+```bash
+# ============================================================
+# PASO 2: Crear sesión de prueba sin autenticación
+# ============================================================
+curl -X POST http://localhost:8080/api/v1/payments/test-session
+
+# Respuesta esperada:
+# "Session created: cs_test_a1b2c3d4..."
+# 
+# Nota: Este endpoint es para testing y usa valores predeterminados
+```
+
+### **6.3. Crear Sesión de Checkout (Producción)**
+
+```bash
+# ============================================================
+# PASO 3: Crear sesión de checkout para suscripción BASIC
+# ============================================================
+curl -X POST http://localhost:8080/api/v1/payments/checkout-session \
+  -H "Content-Type: application/json" \
+  -H "X-User-Id: 3" \
+  -d '{
+    "planType": "BASIC"
+  }'
+
+# Respuesta esperada:
+# {
+#   "sessionId": "cs_test_a1B2c3D4e5F6g7H8i9J0k1L2m3N4o5P6"
+# }
+
+# ============================================================
+# PASO 4: Redirigir al usuario a Stripe Checkout
+# ============================================================
+# En tu frontend, usa el sessionId para redirigir a Stripe:
+# https://checkout.stripe.com/pay/{sessionId}
+#
+# El usuario completará el pago en Stripe y será redirigido a:
+# - Success: http://localhost:8081/payment/success?session_id={CHECKOUT_SESSION_ID}
+# - Cancel: http://localhost:8081/payment/cancel
+```
+
+### **6.4. Crear Sesiones para Otros Planes**
+
+```bash
+# ============================================================
+# PASO 5A: Suscripción PROFESSIONAL (hasta 10 mecánicos)
+# ============================================================
+curl -X POST http://localhost:8080/api/v1/payments/checkout-session \
+  -H "Content-Type: application/json" \
+  -H "X-User-Id: 3" \
+  -d '{
+    "planType": "PROFESSIONAL"
+  }'
+
+# ============================================================
+# PASO 5B: Suscripción PREMIUM (hasta 30 mecánicos)
+# ============================================================
+curl -X POST http://localhost:8080/api/v1/payments/checkout-session \
+  -H "Content-Type: application/json" \
+  -H "X-User-Id: 3" \
+  -d '{
+    "planType": "PREMIUM"
+  }'
+```
+
+### **6.5. Webhook de Stripe (Procesamiento Automático)**
+
+```bash
+# ============================================================
+# PASO 6: Stripe envía webhook cuando la suscripción se crea
+# ============================================================
+# Este endpoint es llamado automáticamente por Stripe, no manualmente
+# POST /webhooks/stripe
+# 
+# Headers enviados por Stripe:
+# - Content-Type: application/json
+# - Stripe-Signature: t=1234567890,v1=abc123...
+#
+# Eventos manejados:
+# - customer.subscription.created: Cuando el usuario completa el pago
+# - customer.subscription.updated: Cuando cambia el plan
+# - customer.subscription.deleted: Cuando se cancela la suscripción
+#
+# El webhook:
+# 1. Verifica la firma de Stripe (seguridad)
+# 2. Extrae metadata.user_id del evento
+# 3. Crea registro de Subscription en la BD
+# 4. Asocia la suscripción con el Workshop Owner
+
+# ============================================================
+# PASO 7: Configurar webhook en Stripe Dashboard
+# ============================================================
+# 1. Ir a https://dashboard.stripe.com/test/webhooks
+# 2. Click "Add endpoint"
+# 3. URL: https://your-domain.com/webhooks/stripe (o usar ngrok para local)
+# 4. Eventos a escuchar:
+#    - customer.subscription.created
+#    - customer.subscription.updated
+#    - customer.subscription.deleted
+# 5. Copiar "Signing secret" (whsec_...) y configurarlo en STRIPE_WEBHOOK_SECRET
+```
+
+### **6.6. Flujo Completo de Suscripción**
+
+**Escenario**: Workshop Owner se suscribe al plan PROFESSIONAL
+
+```bash
+# ============================================================
+# Integración Frontend → Backend → Stripe → Webhook
+# ============================================================
+
+# 1. Frontend: Usuario selecciona plan PROFESSIONAL
+# 2. Frontend: Llama al backend para crear sesión
+OWNER_ID=3  # ID del workshop owner
+
+SESSION_RESPONSE=$(curl -s -X POST http://localhost:8080/api/v1/payments/checkout-session \
+  -H "Content-Type: application/json" \
+  -H "X-User-Id: $OWNER_ID" \
+  -d '{"planType": "PROFESSIONAL"}')
+
+SESSION_ID=$(echo $SESSION_RESPONSE | jq -r '.sessionId')
+echo "Stripe Session ID: $SESSION_ID"
+
+# 3. Frontend: Redirige a Stripe Checkout
+# window.location.href = `https://checkout.stripe.com/pay/${SESSION_ID}`
+
+# 4. Usuario: Completa pago en Stripe
+# - Ingresa datos de tarjeta
+# - Stripe procesa el pago
+# - Stripe crea la suscripción
+
+# 5. Stripe: Envía webhook a /webhooks/stripe
+# - Evento: customer.subscription.created
+# - Metadata: { user_id: "3", plan: "PROFESSIONAL" }
+
+# 6. Backend: Procesa webhook
+# - Verifica firma de Stripe
+# - Crea registro en tabla subscriptions
+# - Asocia suscripción con Workshop Owner ID 3
+
+# 7. Stripe: Redirige al usuario
+# - Success: http://localhost:8081/payment/success?session_id=cs_test_...
+# - Cancel: http://localhost:8081/payment/cancel
+
+# 8. Resultado final:
+# - Workshop puede registrar hasta 10 mecánicos (límite PROFESSIONAL)
+# - Suscripción activa en Stripe y BD local
+# - Renovación automática mensual
+```
+
+### **6.7. Testing con Tarjetas de Prueba de Stripe**
+
+```bash
+# ============================================================
+# Tarjetas de prueba para diferentes escenarios
+# ============================================================
+
+# Pago exitoso:
+# Número: 4242 4242 4242 4242
+# Fecha: Cualquier fecha futura
+# CVC: Cualquier 3 dígitos
+# ZIP: Cualquier 5 dígitos
+
+# Pago rechazado (insufficient funds):
+# Número: 4000 0000 0000 9995
+
+# Pago rechazado (generic decline):
+# Número: 4000 0000 0000 0002
+
+# Requiere autenticación 3D Secure:
+# Número: 4000 0027 6000 3184
+
+# Más tarjetas de prueba: https://stripe.com/docs/testing
+```
+
+---
+
+## 🔧 **Configuración de Stripe (Setup Inicial)**
+
+### **Prerequisitos para Pagos**
+
+1. **Cuenta de Stripe (Test Mode)**
+   ```bash
+   # 1. Crear cuenta en https://stripe.com
+   # 2. Activar modo test (toggle en dashboard)
+   # 3. Obtener Secret Key: https://dashboard.stripe.com/test/apikeys
+   # 4. Copiar: sk_test_51... → STRIPE_SECRET_KEY
+   ```
+
+2. **Crear Productos y Precios en Stripe**
+   ```bash
+   # Dashboard → Products → Add Product
+   
+   # Producto 1: SafeCar Basic
+   # - Precio: $29/mes (o tu moneda)
+   # - Recurring: Monthly
+   # - Copiar Price ID → plans.basic.price-id
+   
+   # Producto 2: SafeCar Professional
+   # - Precio: $79/mes
+   # - Recurring: Monthly
+   # - Copiar Price ID → plans.professional.price-id
+   
+   # Producto 3: SafeCar Premium
+   # - Precio: $149/mes
+   # - Recurring: Monthly
+   # - Copiar Price ID → plans.premium.price-id
+   ```
+
+3. **Configurar Webhook**
+   ```bash
+   # Para desarrollo local con ngrok:
+   ngrok http 8080
+   
+   # Copiar URL HTTPS generada, ejemplo:
+   # https://abc123.ngrok.io
+   
+   # Dashboard → Webhooks → Add endpoint
+   # URL: https://abc123.ngrok.io/webhooks/stripe
+   # Eventos: customer.subscription.*
+   # Copiar Signing Secret → STRIPE_WEBHOOK_SECRET
+   ```
+
+4. **Variables de Entorno**
+   ```bash
+   # Agregar a tu .env o configuración del sistema:
+   export STRIPE_SECRET_KEY="sk_test_51..."
+   export STRIPE_WEBHOOK_SECRET="whsec_test_..."
+   export FRONTEND_URL="http://localhost:8081"
+   ```
+
+### **Arquitectura de Integración**
+
+```
+┌─────────────┐         ┌──────────────┐         ┌─────────────┐
+│   Frontend  │────1───▶│   Backend    │────2───▶│   Stripe    │
+│  (Angular)  │         │ (Spring Boot)│         │     API     │
+└─────────────┘         └──────────────┘         └─────────────┘
+       ▲                        ▲                        │
+       │                        │                        │
+       │                        └────────4───────────────┘
+       │                            (Webhook)
+       └────────────3────────────────────┘
+          (Redirect after payment)
+
+Flujo:
+1. Usuario selecciona plan → Backend crea Stripe Checkout Session
+2. Backend llama a Stripe API → Stripe devuelve sessionId
+3. Frontend redirige a Stripe → Usuario paga → Stripe redirige de vuelta
+4. Stripe envía webhook → Backend guarda suscripción en BD
+```
+
+---
+
+## 📚 **Documentación API (Swagger)**
+
+Todos los endpoints están documentados con OpenAPI 3.0 y disponibles en Swagger UI:
+
+```bash
+# Acceder a la documentación interactiva:
+open http://localhost:8080/swagger-ui.html
+
+# Ver especificación OpenAPI JSON:
+curl http://localhost:8080/v3/api-docs
+```
+
+### **Tags Organizados por Contexto**
+
+- **Authentication**: Sign up, Sign in
+- **Users**: User management
+- **Roles**: Role queries
+- **Person Profiles**: Driver/Mechanic profiles
+- **Business Profiles**: Workshop owner profiles
+- **Vehicles**: Vehicle registration and management
+- **Workshops**: Workshop management
+- **Mechanics**: Mechanic operations
+- **Appointments**: Appointment lifecycle
+- **Telemetry**: IoT telemetry ingestion and queries
+- **Payments**: Stripe checkout sessions
+- **Stripe Webhooks**: Payment event handling
+
+---
 | | Appointments | `/api/v1/workshops/{wid}/appointments` | 9 |
 | | Telemetries | `/api/v1/telemetry` | 5 |
 | | Mechanics | `/api/v1/mechanics` | 1 |
