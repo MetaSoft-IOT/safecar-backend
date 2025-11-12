@@ -141,6 +141,24 @@ spring.jpa.hibernate.naming.physical-strategy=com.safecar.platform.shared.infras
 ```
 
 ### Stripe Payment Configuration
+
+**⚠️ IMPORTANTE**: El contexto de Payments requiere configuración de Stripe API para funcionar correctamente.
+
+#### 1. Variables de Entorno Requeridas
+
+```bash
+# Stripe API Keys (obtener desde: https://dashboard.stripe.com/test/apikeys)
+export STRIPE_SECRET_KEY=sk_test_your_secret_key_here
+
+# Webhook Secret (obtener al crear webhook endpoint en Stripe Dashboard)
+export STRIPE_WEBHOOK_SECRET=whsec_test_your_webhook_secret_here
+
+# Frontend URL para redirecciones post-pago (opcional)
+export FRONTEND_URL=http://localhost:8081  # Default si no se especifica
+```
+
+#### 2. Configuración en application.properties
+
 ```properties
 # Stripe API Configuration
 stripe.secret-key=${STRIPE_SECRET_KEY:sk_test_default_key}
@@ -149,23 +167,57 @@ stripe.webhook-secret=${STRIPE_WEBHOOK_SECRET:whsec_test_default}
 # Frontend URL for payment redirects
 app.frontend-url=${FRONTEND_URL:http://localhost:8081}
 
-# Plan pricing (configured in Stripe Dashboard)
+# Plan pricing (Stripe Price IDs - configurados en Stripe Dashboard)
 plans.basic.price-id=price_1SQbsT3l890Fc29CerlSwh4r
 plans.professional.price-id=price_1SQbt23l890Fc29CqoqLYCnu
 plans.premium.price-id=price_1SQbtK3l890Fc29COSEZ6iK4
 
-# Plan mechanic limits
+# Plan mechanic limits (enforcement local)
 plans.basic.mechanics-limit=3
 plans.professional.mechanics-limit=10
 plans.premium.mechanics-limit=30
 ```
 
-**Required Environment Variables for Payments:**
+#### 3. Setup de Stripe Webhook (para desarrollo local)
+
+Para recibir webhooks de Stripe en desarrollo local, usa Stripe CLI:
+
 ```bash
-export STRIPE_SECRET_KEY=sk_test_51...  # Your Stripe secret key (test mode)
-export STRIPE_WEBHOOK_SECRET=whsec_test_...  # Stripe webhook signing secret
-export FRONTEND_URL=http://localhost:8081  # Optional, defaults shown above
+# Instalar Stripe CLI
+brew install stripe/stripe-cli/stripe
+
+# Login a tu cuenta Stripe
+stripe login
+
+# Escuchar webhooks y reenviar a localhost
+stripe listen --forward-to localhost:8080/webhooks/stripe
+
+# Output esperado:
+# > Ready! Your webhook signing secret is whsec_xxxxx
+# Copiar este secret a STRIPE_WEBHOOK_SECRET
 ```
+
+#### 4. Obtener Stripe API Keys
+
+1. **Crear cuenta Stripe**: https://dashboard.stripe.com/register
+2. **Modo Test**: Cambiar a "Test mode" en el dashboard (toggle superior derecho)
+3. **API Keys**: Navegar a Developers → API keys
+   - **Secret Key**: `sk_test_51...` (usar en `STRIPE_SECRET_KEY`)
+   - **Publishable Key**: `pk_test_...` (usar en frontend)
+4. **Webhook Secret**: 
+   - Navegar a Developers → Webhooks → Add endpoint
+   - URL: `https://your-domain.com/webhooks/stripe` (o usar Stripe CLI para localhost)
+   - Eventos: Seleccionar `customer.subscription.created`
+   - Copiar signing secret: `whsec_...`
+
+#### 5. Configurar Price IDs (Planes de Suscripción)
+
+En Stripe Dashboard → Products:
+1. Crear 3 productos: "Basic", "Professional", "Premium"
+2. Agregar precio recurrente mensual a cada uno (ejemplo: S/. 29, S/. 99, S/. 299)
+3. Copiar los Price IDs (formato: `price_xxx`) a `application.properties`
+
+**Nota**: Los Price IDs hardcodeados en `PlanType.java` deben coincidir con `application.properties`.
 
 ### Running the Application
 
@@ -980,7 +1032,331 @@ curl -X POST http://localhost:8080/api/v1/telemetry \
 
 ---
 
-## 📊 **Resumen de Endpoints Implementados**
+## � **FLUJO 6: Gestión de Suscripciones y Pagos (Payments Context)**
+
+Este flujo demuestra cómo los dueños de talleres suscriben su negocio a los planes de SafeCar (BASIC, PROFESSIONAL, PREMIUM) usando Stripe como pasarela de pagos.
+
+### **6.1. Verificar Estado del Sistema de Pagos**
+
+```bash
+# ============================================================
+# PASO 1: Debug endpoint - Verificar configuración
+# ============================================================
+curl -X GET http://localhost:8080/api/v1/payments/debug \
+  -H "Authorization: Bearer $OWNER_TOKEN"
+
+# Respuesta esperada:
+# {
+#   "status": "Payment controller is working",
+#   "timestamp": "2025-11-15T10:00:00",
+#   "testUserId": "31303200000000000000000000000000",
+#   "availablePlans": ["BASIC", "PROFESSIONAL", "PREMIUM"],
+#   "testResponse": {
+#     "sessionId": "debug-session-123",
+#     "class": "CheckoutSessionResource"
+#   }
+# }
+```
+
+### **6.2. Crear Checkout Session (Iniciar Flujo de Pago)**
+
+```bash
+# ============================================================
+# PASO 2A: Workshop Owner crea sesión de pago para plan BASIC
+# ============================================================
+curl -X POST http://localhost:8080/api/v1/payments/checkout-session \
+  -H "Authorization: Bearer $OWNER_TOKEN" \
+  -H "X-User-Id: owner1@safecar.com" \
+  -H 'Content-Type: application/json' \
+  -d '{
+    "planType": "BASIC"
+  }'
+
+# Respuesta esperada:
+# {
+#   "sessionId": "cs_test_a1b2c3d4e5f6g7h8i9j0k1l2m3n4o5p6q7r8s9t0"
+# }
+
+# Efectos secundarios:
+# - Crea Stripe Checkout Session con metadata:
+#   * user_id: owner1@safecar.com
+#   * plan_type: BASIC
+# - Session configurada con:
+#   * Price ID: price_1SQbsT3l890Fc29CerlSwh4r (BASIC plan)
+#   * Mode: SUBSCRIPTION (recurrente mensual)
+#   * Success URL: http://localhost:8081/payment/success?session_id={CHECKOUT_SESSION_ID}
+#   * Cancel URL: http://localhost:8081/payment/cancel
+
+# ============================================================
+# PASO 2B: Frontend redirige al usuario a Stripe Checkout
+# ============================================================
+# URL de Stripe Checkout (construida en frontend):
+# https://checkout.stripe.com/c/pay/{sessionId}
+
+# Usuario completa el pago en Stripe (ingresa datos de tarjeta)
+# Stripe procesa el pago y crea la subscription
+```
+
+### **6.3. Webhook - Stripe Notifica Creación de Suscripción**
+
+**⚠️ IMPORTANTE**: Este paso es automático, NO requiere llamada manual.
+
+```bash
+# ============================================================
+# PASO 3: Stripe envía webhook al backend (automático)
+# ============================================================
+# POST http://localhost:8080/webhooks/stripe
+# Headers:
+#   Stripe-Signature: t=xxx,v1=yyy (firma HMAC del payload)
+# Body (JSON):
+#   {
+#     "type": "customer.subscription.created",
+#     "data": {
+#       "object": {
+#         "id": "sub_1SQbsT3l890Fc29CerlSwh4r",
+#         "customer": "cus_xxx",
+#         "status": "active",
+#         "metadata": {
+#           "user_id": "owner1@safecar.com",
+#           "plan_type": "BASIC"
+#         }
+#       }
+#     }
+#   }
+
+# Backend procesa webhook:
+# 1. Verifica firma HMAC con webhook-secret
+# 2. Extrae metadata: user_id, plan_type
+# 3. Crea CreateSubscriptionCommand
+# 4. Persiste Subscription en base de datos:
+#    - userId: owner1@safecar.com
+#    - stripeSubscriptionId: sub_1SQbsT3l890Fc29CerlSwh4r
+#    - planType: BASIC
+#    - status: ACTIVE
+# 5. Responde 200 OK a Stripe
+
+# Efectos en el sistema:
+# - Workshop Owner ahora tiene subscripción ACTIVE
+# - Puede agregar hasta 3 mecánicos (límite del plan BASIC)
+```
+
+### **6.4. Consultar Suscripción del Usuario**
+
+```bash
+# ============================================================
+# PASO 4: Obtener suscripción activa del workshop owner
+# ============================================================
+# Nota: Este endpoint aún no está implementado en PaymentsController
+# pero la lógica existe en PaymentQueryService
+
+# Implementación futura esperada:
+# GET /api/v1/payments/subscription?userId=owner1@safecar.com
+
+# Workaround actual: Consultar directamente en base de datos
+# SELECT * FROM subscriptions WHERE user_id = 'owner1@safecar.com' AND status = 'ACTIVE';
+
+# Respuesta esperada (estructura SubscriptionResource):
+# {
+#   "id": 1,
+#   "userId": "owner1@safecar.com",
+#   "planType": "BASIC",
+#   "status": "ACTIVE",
+#   "stripeSubscriptionId": "sub_1SQbsT3l890Fc29CerlSwh4r"
+# }
+```
+
+### **6.5. Upgrade de Plan (BASIC → PROFESSIONAL)**
+
+```bash
+# ============================================================
+# PASO 5: Workshop Owner mejora su plan
+# ============================================================
+curl -X POST http://localhost:8080/api/v1/payments/checkout-session \
+  -H "Authorization: Bearer $OWNER_TOKEN" \
+  -H "X-User-Id: owner1@safecar.com" \
+  -H 'Content-Type: application/json' \
+  -d '{
+    "planType": "PROFESSIONAL"
+  }'
+
+# Respuesta: Nueva sessionId para plan PROFESSIONAL
+# Frontend redirige a Stripe Checkout
+# Usuario completa pago
+# Webhook crea NUEVA subscription (Stripe maneja la cancelación de la anterior)
+
+# Nueva capacidad:
+# - Límite de mecánicos: 10 (antes 3)
+# - Price ID: price_1SQbt23l890Fc29CqoqLYCnu
+```
+
+### **6.6. Plan PREMIUM (Máxima Capacidad)**
+
+```bash
+# ============================================================
+# PASO 6: Workshop Owner selecciona plan empresarial
+# ============================================================
+curl -X POST http://localhost:8080/api/v1/payments/checkout-session \
+  -H "Authorization: Bearer $OWNER_TOKEN" \
+  -H "X-User-Id: owner1@safecar.com" \
+  -H 'Content-Type: application/json' \
+  -d '{
+    "planType": "PREMIUM"
+  }'
+
+# Plan PREMIUM incluye:
+# - Límite de mecánicos: 30
+# - Price ID: price_1SQbtK3l890Fc29COSEZ6iK4
+# - Facturación mensual recurrente vía Stripe
+```
+
+### **6.7. Testing sin Stripe (Endpoint de Prueba)**
+
+**⚠️ Solo para desarrollo - Deshabilitar en producción**
+
+```bash
+# ============================================================
+# PASO 7: Crear sesión de prueba sin autenticación
+# ============================================================
+curl -X POST http://localhost:8080/api/v1/payments/test-session \
+  -H 'Content-Type: application/json'
+
+# Respuesta:
+# "Session created: cs_test_xxxxxxxxxxxxx"
+
+# Crea checkout session con userId hardcodeado: "test-user-123"
+# Plan por defecto: BASIC
+# No requiere autenticación (útil para debugging)
+```
+
+---
+
+## 🔗 **FLUJO 7: Integración Workshop + Payments (Enforcement de Límites)**
+
+Este flujo demuestra cómo el plan de suscripción afecta las operaciones del Workshop Context.
+
+### **Escenario**: Workshop Owner con plan BASIC intenta agregar más de 3 mecánicos
+
+```bash
+# ============================================================
+# CONTEXTO: Workshop Owner tiene subscription BASIC activa
+# ============================================================
+# Subscription actual:
+# - planType: BASIC
+# - mechanicsLimit: 3
+# - status: ACTIVE
+
+# ============================================================
+# PASO 1: Agregar 1er mecánico (✅ Permitido)
+# ============================================================
+curl -X POST "http://localhost:8080/api/v1/person-profiles?userEmail=mechanic1@safecar.com" \
+  -H "Authorization: Bearer $MECHANIC_TOKEN" \
+  -H 'Content-Type: application/json' \
+  -d '{
+    "firstName": "Carlos",
+    "lastName": "Rodríguez",
+    "email": "mechanic1@safecar.com",
+    "phone": "+51987654321",
+    "city": "Lima"
+  }'
+
+# Respuesta: 201 Created
+# totalMechanics del Workshop: 1/3
+
+# ============================================================
+# PASO 2: Agregar 2do mecánico (✅ Permitido)
+# ============================================================
+curl -X POST "http://localhost:8080/api/v1/person-profiles?userEmail=mechanic2@safecar.com" \
+  -H "Authorization: Bearer $MECHANIC2_TOKEN" \
+  -H 'Content-Type: application/json' \
+  -d '{
+    "firstName": "Ana",
+    "lastName": "Torres",
+    "email": "mechanic2@safecar.com",
+    "phone": "+51987654322",
+    "city": "Lima"
+  }'
+
+# Respuesta: 201 Created
+# totalMechanics del Workshop: 2/3
+
+# ============================================================
+# PASO 3: Agregar 3er mecánico (✅ Permitido - Límite alcanzado)
+# ============================================================
+curl -X POST "http://localhost:8080/api/v1/person-profiles?userEmail=mechanic3@safecar.com" \
+  -H "Authorization: Bearer $MECHANIC3_TOKEN" \
+  -H 'Content-Type: application/json' \
+  -d '{
+    "firstName": "Luis",
+    "lastName": "Martínez",
+    "email": "mechanic3@safecar.com",
+    "phone": "+51987654323",
+    "city": "Lima"
+  }'
+
+# Respuesta: 201 Created
+# totalMechanics del Workshop: 3/3 (LÍMITE ALCANZADO)
+
+# ============================================================
+# PASO 4: Intentar agregar 4to mecánico (❌ BLOQUEADO)
+# ============================================================
+curl -X POST "http://localhost:8080/api/v1/person-profiles?userEmail=mechanic4@safecar.com" \
+  -H "Authorization: Bearer $MECHANIC4_TOKEN" \
+  -H 'Content-Type: application/json' \
+  -d '{
+    "firstName": "Pedro",
+    "lastName": "Sánchez",
+    "email": "mechanic4@safecar.com",
+    "phone": "+51987654324",
+    "city": "Lima"
+  }'
+
+# Respuesta esperada (implementación futura):
+# 403 Forbidden
+# {
+#   "error": "Subscription limit exceeded",
+#   "message": "Your BASIC plan allows up to 3 mechanics. Upgrade to PROFESSIONAL for 10 mechanics.",
+#   "currentPlan": "BASIC",
+#   "currentLimit": 3,
+#   "suggestedPlan": "PROFESSIONAL"
+# }
+
+# ============================================================
+# PASO 5: Upgrade a plan PROFESSIONAL
+# ============================================================
+curl -X POST http://localhost:8080/api/v1/payments/checkout-session \
+  -H "Authorization: Bearer $OWNER_TOKEN" \
+  -H "X-User-Id: owner1@safecar.com" \
+  -H 'Content-Type: application/json' \
+  -d '{
+    "planType": "PROFESSIONAL"
+  }'
+
+# Usuario completa pago en Stripe
+# Webhook actualiza subscription:
+# - planType: PROFESSIONAL
+# - mechanicsLimit: 10
+
+# ============================================================
+# PASO 6: Reintentar agregar 4to mecánico (✅ PERMITIDO)
+# ============================================================
+curl -X POST "http://localhost:8080/api/v1/person-profiles?userEmail=mechanic4@safecar.com" \
+  -H "Authorization: Bearer $MECHANIC4_TOKEN" \
+  -H 'Content-Type: application/json' \
+  -d '{
+    "firstName": "Pedro",
+    "lastName": "Sánchez",
+    "email": "mechanic4@safecar.com",
+    "phone": "+51987654324",
+    "city": "Lima"
+  }'
+
+# Respuesta: 201 Created
+# totalMechanics del Workshop: 4/10
+```
+
+---
+
+## �📊 **Resumen de Endpoints Implementados**
 
 | **Contexto** | **Controlador** | **Base Path** | **Endpoints** |
 |--------------|----------------|---------------|---------------|
@@ -996,6 +1372,218 @@ curl -X POST http://localhost:8080/api/v1/telemetry \
 | | Telemetry | `/api/v1/telemetry` | 6 |
 | **Payments** | Payments | `/api/v1/payments` | 3 |
 | | Webhooks | `/webhooks/stripe` | 1 |
+
+**Total**: 37 endpoints REST + 1 webhook
+
+---
+
+## 🔒 **Detalles Técnicos del Payments Context**
+
+### **Arquitectura DDD/CQRS Implementada**
+
+```
+payments/
+├── domain/
+│   ├── model/
+│   │   ├── aggregates/
+│   │   │   └── Subscription.java          // Aggregate Root (@Entity)
+│   │   ├── commands/
+│   │   │   ├── CreateCheckoutSessionCommand.java
+│   │   │   └── CreateSubscriptionCommand.java
+│   │   ├── queries/
+│   │   │   └── GetSubscriptionByUserIdQuery.java
+│   │   └── valueobjects/
+│   │       └── PlanType.java               // Enum (BASIC/PROFESSIONAL/PREMIUM)
+│   └── services/
+│       ├── PaymentCommandService.java      // Interface
+│       └── PaymentQueryService.java        // Interface
+├── application/
+│   └── internal/
+│       ├── commandservices/
+│       │   └── PaymentCommandServiceImpl.java  // @Transactional
+│       └── queryservices/
+│           └── PaymentQueryServiceImpl.java
+├── infrastructure/
+│   ├── external/
+│   │   └── StripePaymentGateway.java       // Stripe SDK integration
+│   └── persistence/jpa/repositories/
+│       └── SubscriptionRepository.java     // JpaRepository<Subscription, Long>
+└── interfaces/rest/
+    ├── resources/
+    │   ├── CreateCheckoutSessionResource.java   // Request DTO
+    │   ├── CheckoutSessionResource.java         // Response DTO
+    │   └── SubscriptionResource.java            // Subscription DTO
+    ├── transform/
+    │   ├── CreateCheckoutSessionCommandFromResourceAssembler.java
+    │   ├── CheckoutSessionResourceFromSessionIdAssembler.java
+    │   └── SubscriptionResourceFromAggregateAssembler.java
+    ├── PaymentsController.java            // REST API
+    └── StripeWebhooksController.java      // Webhook handler
+```
+
+### **Subscription Aggregate (Domain Model)**
+
+```java
+@Entity
+@Table(name = "subscriptions")
+public class Subscription extends AuditableAbstractAggregateRoot<Subscription> {
+    private String userId;                    // Owner email
+    
+    @Enumerated(EnumType.STRING)
+    private PlanType planType;                // BASIC/PROFESSIONAL/PREMIUM
+    
+    private String status;                    // ACTIVE/CANCELLED/EXPIRED
+    
+    @Column(unique = true)
+    private String stripeSubscriptionId;      // Stripe reference
+    
+    // Domain methods
+    public void cancel() { this.status = "CANCELLED"; }
+    public void activate() { this.status = "ACTIVE"; }
+    public void expire() { this.status = "EXPIRED"; }
+    public boolean isActive() { return "ACTIVE".equals(this.status); }
+    public int getMechanicsLimit() { return this.planType.getMechanicsLimit(); }
+}
+```
+
+### **PlanType Value Object**
+
+```java
+public enum PlanType {
+    BASIC("price_1SQbsT3l890Fc29CerlSwh4r", 3),
+    PROFESSIONAL("price_1SQbt23l890Fc29CqoqLYCnu", 10),
+    PREMIUM("price_1SQbtK3l890Fc29COSEZ6iK4", 30);
+
+    private final String stripePriceId;     // Stripe Price ID
+    private final int mechanicsLimit;       // Business rule
+    
+    public String getStripePriceId() { return stripePriceId; }
+    public int getMechanicsLimit() { return mechanicsLimit; }
+}
+```
+
+### **Flujo de Datos - Checkout Session**
+
+```
+1. POST /api/v1/payments/checkout-session
+   → PaymentsController.createCheckoutSession()
+   
+2. Validación @Valid CreateCheckoutSessionResource
+   
+3. CreateCheckoutSessionCommandFromResourceAssembler
+   → CreateCheckoutSessionCommand(userId, PlanType)
+   
+4. PaymentCommandService.handle(command)
+   → PaymentCommandServiceImpl.handle(command)
+   
+5. StripePaymentGateway.createCheckoutSession(userId, planType)
+   → Stripe API: POST /v1/checkout/sessions
+     * mode: subscription
+     * metadata: { user_id, plan_type }
+     * line_items: [{ price: planType.stripePriceId }]
+     * success_url: {FRONTEND_URL}/payment/success
+     * cancel_url: {FRONTEND_URL}/payment/cancel
+   
+6. Stripe Response: { id: "cs_test_xxx" }
+   
+7. CheckoutSessionResourceFromSessionIdAssembler
+   → CheckoutSessionResource(sessionId)
+   
+8. Response 200 OK { "sessionId": "cs_test_xxx" }
+```
+
+### **Flujo de Datos - Webhook Subscription Created**
+
+```
+1. POST /webhooks/stripe (Stripe → Backend)
+   Headers: Stripe-Signature: t=xxx,v1=yyy
+   Body: { type: "customer.subscription.created", data: {...} }
+   
+2. StripeWebhooksController.handleWebhook(payload, signature)
+   
+3. Webhook.constructEvent(payload, signature, webhookSecret)
+   → Verifica firma HMAC SHA-256
+   → Si falla: Response 400 "Invalid signature"
+   
+4. Extrae metadata del evento:
+   - userId = subscription.metadata.get("user_id")
+   - planType = PlanType.valueOf(subscription.metadata.get("plan_type"))
+   - stripeSubscriptionId = subscription.id
+   
+5. CreateSubscriptionCommand(userId, stripeSubscriptionId, planType)
+   
+6. PaymentCommandService.handle(command)
+   → @Transactional
+   → new Subscription(command)
+   → subscriptionRepository.save(subscription)
+   
+7. Response 200 OK (Stripe marca webhook como exitoso)
+```
+
+### **Tabla de Base de Datos**
+
+```sql
+CREATE TABLE subscriptions (
+    id BIGINT AUTO_INCREMENT PRIMARY KEY,
+    user_id VARCHAR(255) NOT NULL,
+    plan_type VARCHAR(20) NOT NULL,  -- 'BASIC', 'PROFESSIONAL', 'PREMIUM'
+    status VARCHAR(20) NOT NULL,     -- 'ACTIVE', 'CANCELLED', 'EXPIRED'
+    stripe_subscription_id VARCHAR(255) UNIQUE,
+    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+    INDEX idx_user_id (user_id),
+    INDEX idx_stripe_subscription_id (stripe_subscription_id),
+    INDEX idx_status (status)
+);
+```
+
+### **Queries JPA Disponibles**
+
+```java
+// SubscriptionRepository.java
+Optional<Subscription> findByUserId(String userId);
+Optional<Subscription> findByStripeSubscriptionId(String stripeSubscriptionId);
+boolean existsByUserIdAndStatus(String userId, String status);
+```
+
+### **Manejo de Errores**
+
+| **Escenario** | **HTTP Status** | **Respuesta** |
+|---------------|-----------------|---------------|
+| Stripe API error | 500 | `{"error": "Failed to create checkout session: {message}"}` |
+| Invalid signature (webhook) | 400 | `"Invalid signature"` |
+| Webhook processing error | 400 | `"Error processing webhook"` |
+| Invalid plan type | 400 | Validación de `@Valid` (Spring) |
+| Duplicate subscription | 500 | DataIntegrityViolationException (unique constraint) |
+
+### **Seguridad y Validaciones**
+
+1. **Webhook Signature Verification**: Usa HMAC SHA-256 con `webhook-secret`
+2. **HTTPS Required**: En producción, webhooks requieren HTTPS
+3. **Idempotency**: Stripe reintenta webhooks fallidos (hasta 3 días)
+4. **Metadata Validation**: Fallback a "BASIC" si `plan_type` falta
+5. **User ID Validation**: Header `X-User-Id` debe coincidir con usuario autenticado
+
+### **Limitaciones Conocidas**
+
+1. **No hay endpoint GET /subscription**: Query service implementado pero no expuesto en controller
+2. **No hay cancelación manual**: Las cancelaciones deben hacerse en Stripe Dashboard
+3. **No hay manejo de upgrades/downgrades**: Stripe crea nueva subscription, pero no se cancela la anterior automáticamente
+4. **Enforcement de límites pendiente**: Workshop Context aún no valida `mechanicsLimit` antes de agregar mecánicos
+5. **Test endpoint en producción**: `/test-session` debe deshabilitarse con profiles
+
+### **Mejoras Futuras Sugeridas**
+
+- [ ] Implementar endpoint `GET /api/v1/payments/subscription?userId={userId}`
+- [ ] Implementar endpoint `DELETE /api/v1/payments/subscription/{id}` (cancela en Stripe)
+- [ ] Agregar webhook handler para `customer.subscription.updated` (cambios de plan)
+- [ ] Agregar webhook handler para `customer.subscription.deleted` (expiración)
+- [ ] Implementar validación en Workshop Context: verificar `subscription.mechanicsLimit` antes de crear Mechanic
+- [ ] Agregar Spring Profile para deshabilitar `/test-session` en producción
+- [ ] Implementar retry logic en webhook processing (idempotency keys)
+- [ ] Agregar métricas de Stripe (total_revenue, active_subscriptions, churn_rate)
+
+---
 
 ---
 
