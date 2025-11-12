@@ -1,6 +1,8 @@
-package com.safecar.platform.payments.infrastructure.rest;
+package com.safecar.platform.payments.interfaces.rest;
 
-import com.safecar.platform.payments.application.services.PaymentApplicationService;
+import com.safecar.platform.payments.domain.model.commands.CreateSubscriptionCommand;
+import com.safecar.platform.payments.domain.model.valueobjects.PlanType;
+import com.safecar.platform.payments.domain.services.PaymentCommandService;
 import com.stripe.exception.SignatureVerificationException;
 import com.stripe.model.Event;
 import com.stripe.model.Subscription;
@@ -15,15 +17,15 @@ import org.springframework.web.bind.annotation.*;
 
 @RestController
 @Tag(name = "Stripe Webhooks", description = "Stripe webhook endpoints for handling payment events")
-public class StripeWebhookController {
+public class StripeWebhooksController {
 
-    private final PaymentApplicationService paymentService;
+    private final PaymentCommandService paymentCommandService;
 
     @Value("${stripe.webhook-secret}")
     private String webhookSecret;
 
-    public StripeWebhookController(PaymentApplicationService paymentService) {
-        this.paymentService = paymentService;
+    public StripeWebhooksController(PaymentCommandService paymentCommandService) {
+        this.paymentCommandService = paymentCommandService;
     }
 
     /**
@@ -48,9 +50,16 @@ public class StripeWebhookController {
 
                 // Extraer metadata
                 String userId = subscription.getMetadata().get("user_id");
-                String planType = "BASIC"; // Puedes ajustar esto según tu lógica
-
-                paymentService.handleSubscriptionCreated(userId, subscription.getId(), planType);
+                String planTypeStr = subscription.getMetadata().getOrDefault("plan_type", "BASIC");
+                
+                PlanType planType = PlanType.valueOf(planTypeStr.toUpperCase());
+                
+                var command = new CreateSubscriptionCommand(
+                        userId, 
+                        subscription.getId(), 
+                        planType);
+                
+                paymentCommandService.handle(command);
             }
 
             return ResponseEntity.ok().build();

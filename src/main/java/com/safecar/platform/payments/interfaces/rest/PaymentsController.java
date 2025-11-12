@@ -1,13 +1,17 @@
-package com.safecar.platform.payments.infrastructure.rest;
+package com.safecar.platform.payments.interfaces.rest;
 
-import com.safecar.platform.payments.application.dtos.CheckoutSessionResponse;
-import com.safecar.platform.payments.application.services.PaymentApplicationService;
+import com.safecar.platform.payments.domain.services.PaymentCommandService;
+import com.safecar.platform.payments.interfaces.rest.resources.CheckoutSessionResource;
+import com.safecar.platform.payments.interfaces.rest.resources.CreateCheckoutSessionResource;
+import com.safecar.platform.payments.interfaces.rest.transform.CheckoutSessionResourceFromSessionIdAssembler;
+import com.safecar.platform.payments.interfaces.rest.transform.CreateCheckoutSessionCommandFromResourceAssembler;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.media.Content;
 import io.swagger.v3.oas.annotations.media.Schema;
 import io.swagger.v3.oas.annotations.responses.ApiResponse;
 import io.swagger.v3.oas.annotations.responses.ApiResponses;
 import io.swagger.v3.oas.annotations.tags.Tag;
+import jakarta.validation.Valid;
 import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
@@ -20,12 +24,12 @@ import java.util.Map;
 @RestController
 @RequestMapping(value = "/api/v1/payments", produces = MediaType.APPLICATION_JSON_VALUE)
 @Tag(name = "Payments", description = "Stripe payment integration and subscription management endpoints")
-public class PaymentController {
+public class PaymentsController {
 
-    private final PaymentApplicationService paymentService;
+    private final PaymentCommandService paymentCommandService;
 
-    public PaymentController(PaymentApplicationService paymentService) {
-        this.paymentService = paymentService;
+    public PaymentsController(PaymentCommandService paymentCommandService) {
+        this.paymentCommandService = paymentCommandService;
     }
 
     /**
@@ -44,12 +48,9 @@ public class PaymentController {
         debugInfo.put("testUserId", "31303200000000000000000000000000");
         debugInfo.put("availablePlans", List.of("BASIC", "PROFESSIONAL", "PREMIUM"));
 
-        // Test response object
-        CheckoutSessionResponse testResponse = new CheckoutSessionResponse("debug-session-123");
-
         Map<String, Object> responseInfo = new HashMap<>();
-        responseInfo.put("sessionId", testResponse.getSessionId());
-        responseInfo.put("class", testResponse.getClass().getName());
+        responseInfo.put("sessionId", "debug-session-123");
+        responseInfo.put("class", "CheckoutSessionResource");
         debugInfo.put("testResponse", responseInfo);
 
         return ResponseEntity.ok(debugInfo);
@@ -67,13 +68,12 @@ public class PaymentController {
     })
     public ResponseEntity<String> testSession() {
         try {
-            // Test directo sin parámetros
-            String testSessionId = paymentService.createCheckoutSession(
-                    "test-user-123",
-                    "BASIC"
-            ).getSessionId();
+            var testResource = new CreateCheckoutSessionResource("BASIC");
+            var command = CreateCheckoutSessionCommandFromResourceAssembler
+                    .toCommandFromResource("test-user-123", testResource);
+            String sessionId = paymentCommandService.handle(command);
 
-            return ResponseEntity.ok("Session created: " + testSessionId);
+            return ResponseEntity.ok("Session created: " + sessionId);
 
         } catch (Exception e) {
             return ResponseEntity.badRequest().body("Error: " + e.getMessage());
@@ -88,34 +88,20 @@ public class PaymentController {
                description = "Creates a Stripe checkout session for the specified plan type (BASIC, PROFESSIONAL, PREMIUM)")
     @ApiResponses(value = {
             @ApiResponse(responseCode = "200", description = "Checkout session created successfully",
-                         content = @Content(schema = @Schema(implementation = CheckoutSessionResponse.class))),
+                         content = @Content(schema = @Schema(implementation = CheckoutSessionResource.class))),
             @ApiResponse(responseCode = "400", description = "Invalid plan type or user ID"),
             @ApiResponse(responseCode = "500", description = "Stripe API error")
     })
-    public ResponseEntity<CheckoutSessionResponse> createCheckoutSession(
-            @RequestBody CreateCheckoutRequest request,
+    public ResponseEntity<CheckoutSessionResource> createCheckoutSession(
+            @Valid @RequestBody CreateCheckoutSessionResource resource,
             @RequestHeader("X-User-Id") String userId) {
 
-        CheckoutSessionResponse response = paymentService.createCheckoutSession(userId, request.getPlanType());
-        return ResponseEntity.ok(response);
-    }
-
-    /**
-     * Request DTO for creating checkout sessions.
-     */
-    @Schema(description = "Request object for creating a Stripe checkout session")
-    public static class CreateCheckoutRequest {
+        var command = CreateCheckoutSessionCommandFromResourceAssembler
+                .toCommandFromResource(userId, resource);
+        String sessionId = paymentCommandService.handle(command);
+        var response = CheckoutSessionResourceFromSessionIdAssembler
+                .toResourceFromSessionId(sessionId);
         
-        @Schema(description = "Subscription plan type", example = "BASIC", 
-                allowableValues = {"BASIC", "PROFESSIONAL", "PREMIUM"})
-        private String planType;
-
-        public String getPlanType() {
-            return planType;
-        }
-
-        public void setPlanType(String planType) {
-            this.planType = planType;
-        }
+        return ResponseEntity.ok(response);
     }
 }
