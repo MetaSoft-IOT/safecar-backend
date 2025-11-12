@@ -118,6 +118,7 @@ public class WebSecurityConfiguration {
         String[] publicMatchers = {
                 "/api/v1/authentication/**",
                 "/api/v1/profiles/**", // Allow profiles endpoints for testing
+                "/api/v1/payments/**",  // Payments webhooks and public endpoints
                 "/v3/api-docs/**",
                 "/swagger-ui.html",
                 "/swagger-ui/**",
