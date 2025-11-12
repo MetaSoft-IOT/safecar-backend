@@ -27,11 +27,4 @@ public interface MechanicRepository extends JpaRepository<Mechanic, Long> {
      */
     boolean existsByProfileId_ProfileId(Long profileId);
 
-    /**
-     * Checks if a Mechanic exists by their company name.
-     * 
-     * @param companyName the company name to check for
-     * @return true if the Mechanic exists, false otherwise
-     */
-    boolean existsByCompanyName(String companyName);
 }

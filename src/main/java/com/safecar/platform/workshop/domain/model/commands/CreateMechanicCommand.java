@@ -12,13 +12,11 @@ import com.safecar.platform.workshop.domain.model.entities.Specialization;
  * </p>
  * 
  * @param profileId the ID of the PersonProfile from Profiles BC
- * @param companyName the name of the workshop company
  * @param specializations set of specializations of the mechanic
  * @param yearsOfExperience years of professional experience
  */
 public record CreateMechanicCommand(
         Long profileId,
-        String companyName,
         Set<Specialization> specializations,
         Integer yearsOfExperience
 ) {

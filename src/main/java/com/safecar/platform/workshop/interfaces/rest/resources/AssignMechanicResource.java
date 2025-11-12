@@ -1,6 +1,6 @@
 package com.safecar.platform.workshop.interfaces.rest.resources;
 
-import java.util.UUID;
+import jakarta.validation.constraints.NotNull;
 
 /**
  * Assign Mechanic Resource - Represents the raw data required to assign a mechanic
@@ -8,5 +8,5 @@ import java.util.UUID;
  * 
  * @param mechanicId The unique identifier of the mechanic to be assigned.
  */
-public record AssignMechanicResource(UUID mechanicId) {
+public record AssignMechanicResource(Long mechanicId) {
 }

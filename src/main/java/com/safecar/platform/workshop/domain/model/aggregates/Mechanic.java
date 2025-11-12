@@ -1,7 +1,6 @@
 package com.safecar.platform.workshop.domain.model.aggregates;
 
 import java.util.HashSet;
-import java.util.List;
 import java.util.Set;
 import java.util.stream.Collectors;
 
@@ -16,24 +15,15 @@ import jakarta.persistence.FetchType;
 import jakarta.persistence.JoinColumn;
 import jakarta.persistence.JoinTable;
 import jakarta.persistence.ManyToMany;
-import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.NotNull;
 import jakarta.validation.constraints.PositiveOrZero;
 import lombok.Getter;
 
 /**
- * Mechanic aggregate root entity
- * 
- * @summary
- *          This entity represents the mechanic aggregate root entity in the
- *          Workshop BC.
- *          It contains the profile ID (reference to PersonProfile in Profiles
- *          BC) and
- *          workshop-specific data like company name, specializations, and
- *          experience.
- * @see ProfileId
- * @see AuditableAbstractAggregateRoot
- * @since 1.0
+ * Mechanic aggregate
+ * <p>
+ * Represents a mechanic in the workshop domain.
+ * </p>
  */
 @Entity
 @Getter
@@ -42,9 +32,6 @@ public class Mechanic extends AuditableAbstractAggregateRoot<Mechanic> {
     @Embedded
     @Column(name = "profile_id")
     private ProfileId profileId;
-
-    @NotBlank(message = "Company name is required")
-    private String companyName;
 
     /**
      * Specializations assigned to the mechanic
@@ -91,23 +78,16 @@ public class Mechanic extends AuditableAbstractAggregateRoot<Mechanic> {
      * Constructor with all fields
      * 
      * @param profileId         the profile id
-     * @param companyName       the company name
      * @param specializations   the specializations of the mechanic
      * @param yearsOfExperience the years of experience
      */
-    public Mechanic(
-            Long profileId,
-            String companyName,
-            Set<Specialization> specializations,
-            Integer yearsOfExperience
-
-    ) {
+    public Mechanic(Long profileId,
+                    Set<Specialization> specializations,
+                    Integer yearsOfExperience) {
         this();
         this.profileId = new ProfileId(profileId);
-        this.companyName = companyName;
-        this.yearsOfExperience = yearsOfExperience;
-        
-        this.specializations = new HashSet<>();
+        this.yearsOfExperience = yearsOfExperience == null ? 0 : Math.max(0, yearsOfExperience);
+        this.specializations = Specialization.validateSpecializations(specializations);
     }
 
     /**
@@ -190,30 +170,17 @@ public class Mechanic extends AuditableAbstractAggregateRoot<Mechanic> {
     }
 
     /**
-     * Update company name
-     * 
-     * @param companyName new company name
-     */
-    public void updateCompanyName(String companyName) {
-        if (companyName != null && !companyName.trim().isEmpty()) {
-            this.companyName = companyName.trim();
-        }
-    }
-
-    /**
      * Factory method to create a Mechanic from parameters
      * 
      * @param profileId         the profile id
-     * @param companyName       the company name
      * @param specializations   the specializations of the mechanic
      * @param yearsOfExperience the years of experience
      * @return a new Mechanic instance
      */
     public static Mechanic create(CreateMechanicCommand command) {
-        return new Mechanic(
-                command.profileId(),
-                command.companyName(),
-                command.specializations(),
-                command.yearsOfExperience());
+    return new Mechanic(
+        command.profileId(),
+        command.specializations(),
+        command.yearsOfExperience());
     }
 }

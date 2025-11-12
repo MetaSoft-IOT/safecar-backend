@@ -34,6 +34,7 @@ public class MechanicCommandServiceImpl implements MechanicCommandService {
         this.specializationRepository = specializationRepository;
     }
 
+    // inheritdoc javadoc
     @Override
     public Optional<Mechanic> handle(CreateMechanicCommand command) {
 
@@ -52,17 +53,15 @@ public class MechanicCommandServiceImpl implements MechanicCommandService {
                     .collect(Collectors.toSet());
         }
 
-        var mechanic = Mechanic.create(command);
-
-        var saved = mechanicRepository.save(mechanic);
-        saved.addSpecializations(specializations);
-        mechanicRepository.save(saved);
-
-        return Optional.of(saved);
+    var mechanic = Mechanic.create(command);
+    mechanic.addSpecializations(specializations); // ensure defaults applied if necessary
+    var saved = mechanicRepository.save(mechanic);
+    return Optional.of(saved);
     }
 
+    // inheritdoc javadoc
     @Override
-    public Optional<Mechanic> handle(UpdateMechanicMetricsCommand command, Long profileId) {
+    public Optional<Mechanic> handle(UpdateMechanicMetricsCommand command, Long mechanicId) {
 
         var specializations = command.specializations().stream()
                 .map(specialization -> specializationRepository.findByName(specialization.getName())
@@ -73,13 +72,12 @@ public class MechanicCommandServiceImpl implements MechanicCommandService {
         if (specializations.isEmpty())
             throw new IllegalArgumentException("Mechanic must have at least one specialization.");
 
-        var mechanicOpt = mechanicRepository.findByProfileId_ProfileId(profileId);
+        var mechanicOpt = mechanicRepository.findById(mechanicId);
 
         if (mechanicOpt.isEmpty())
             return Optional.empty();
 
         var mechanic = mechanicOpt.get();
-        mechanic.updateCompanyName(command.companyName());
         mechanic.updateSpecializations(specializations);
         mechanic.updateYearsOfExperience(command.yearsOfExperience());
 

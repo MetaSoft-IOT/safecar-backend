@@ -44,11 +44,10 @@ public class MechanicProfileCreatedEventHandler {
         var isMechanic = event.userRoles().contains("ROLE_MECHANIC");
 
         if (isMechanic) {
-            var command = new CreateMechanicCommand(
-                    event.profileId(),
-                    "Independent Mechanic", // Default company name that makes sense
-                    null,
-                    0);
+        var command = new CreateMechanicCommand(
+            event.profileId(),
+            null,
+            0);
 
             commandService.handle(command);
         }

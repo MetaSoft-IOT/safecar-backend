@@ -33,5 +33,5 @@ public interface MechanicCommandService {
      * @return an Optional containing the updated Mechanic, or empty if update
      *         failed
      */
-    Optional<Mechanic> handle(UpdateMechanicMetricsCommand command, Long profileId);
+    Optional<Mechanic> handle(UpdateMechanicMetricsCommand command, Long mechanicId);
 }

@@ -23,9 +23,8 @@ public class UpdateMechanicMetricsCommandFromResourceAssembler {
         var specializations = SpecializationSetFromStringAssembler
                 .toSpecializationSetFromStringSet(resource.specializations());
 
-        return new UpdateMechanicMetricsCommand(
-                resource.companyName(),
-                specializations,
-                resource.yearsOfExperience());
+    return new UpdateMechanicMetricsCommand(
+        specializations,
+        resource.yearsOfExperience());
     }
 }

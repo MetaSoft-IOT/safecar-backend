@@ -18,7 +18,7 @@ import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.tags.Tag;
 
 @RestController
-@RequestMapping(value = "/api/v1/mechanic-profiles", produces = MediaType.APPLICATION_JSON_VALUE)
+@RequestMapping(value = "/api/v1/mechanics", produces = MediaType.APPLICATION_JSON_VALUE)
 @Tag(name = "Mechanics", description = "Mechanic management endpoints")
 public class MechanicsController {
 
@@ -28,16 +28,16 @@ public class MechanicsController {
         this.commandService = commandService;
     }
 
-    @Operation(summary = "Update Mechanic Metrics by Profile ID")
-    @PatchMapping("/{profileId}/metrics")
+    @Operation(summary = "Update mechanic")
+    @PatchMapping("/{mechanicId}")
     public ResponseEntity<MechanicResource> updateMechanicMetrics(
-            @PathVariable Long profileId,
+            @PathVariable Long mechanicId,
             @RequestBody UpdateMechanicMetricsResource resource) {
 
         var command = UpdateMechanicMetricsCommandFromResourceAssembler.toCommandFromResource(resource);
-        var result = commandService.handle(command, profileId);
+        var result = commandService.handle(command, mechanicId);
 
-        if (result == null)
+        if (result == null || result.isEmpty())
             return ResponseEntity.notFound().build();
 
         var mechanic = result.get();
