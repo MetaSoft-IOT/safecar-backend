@@ -91,4 +91,17 @@ public class Workshop extends AuditableAbstractAggregateRoot<Workshop> {
     public Long getBusinessProfileId() {
         return this.businessProfileId.profileId();
     }
+
+    /**
+     * Update workshop description.
+     * Trims value; ignores null or blank to avoid accidental clearing.
+     *
+     * @param newDescription new description text
+     */
+    public void updateDescription(String newDescription) {
+        if (newDescription == null) return;
+        var trimmed = newDescription.trim();
+        if (trimmed.isEmpty()) return;
+        this.workshopDescription = trimmed;
+    }
 }

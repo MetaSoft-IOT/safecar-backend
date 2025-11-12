@@ -1,13 +1,14 @@
 package com.safecar.platform.workshop.interfaces.rest;
 
 import io.swagger.v3.oas.annotations.Operation;
-import io.swagger.v3.oas.annotations.parameters.RequestBody;
+import org.springframework.web.bind.annotation.RequestBody;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
+import org.springframework.web.bind.annotation.DeleteMapping;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PatchMapping;
 import org.springframework.web.bind.annotation.PathVariable;
@@ -109,7 +110,7 @@ public class AppointmentsController {
      * Update an appointment (reschedule, cancel, or other modifications).
      */
     @PatchMapping("/{appointmentId}")
-    @Operation(summary = "Update an appointment (reschedule, cancel, or other modifications)")
+    @Operation(summary = "Reschedule an appointment")
     public ResponseEntity<AppointmentResource> rescheduleAppointment(
             @PathVariable Long workshopId,
             @PathVariable Long appointmentId,
@@ -161,32 +162,6 @@ public class AppointmentsController {
     }
 
     /**
-     * Associate an appointment with a service order.
-     */
-    @PatchMapping("/{appointmentId}/service-order")
-    @Operation(summary = "Associate appointment with service order")
-    public ResponseEntity<AppointmentResource> setAppointmentServiceOrder(
-            @PathVariable Long workshopId,
-            @PathVariable Long appointmentId,
-            @Valid @RequestBody LinkAppointmentToServiceOrderResource resource) {
-
-        var command = LinkAppointmentToServiceOrderCommandFromResourceAssembler
-                .toCommandFromResource(appointmentId, resource);
-        commandService.handle(command);
-
-        var query = new GetAppointmentByIdQuery(appointmentId);
-        var appointment = queryService.handle(query);
-
-        if (appointment.isEmpty())
-            return ResponseEntity.notFound().build();
-
-        var appointmentResource = AppointmentResourceFromAggregateAssembler
-                .toResourceFromAggregate(appointment.get());
-
-        return ResponseEntity.ok(appointmentResource);
-    }
-
-    /**
      * Add a note to an appointment.
      */
     @PostMapping("/{appointmentId}/notes")
@@ -201,5 +176,81 @@ public class AppointmentsController {
         commandService.handle(command);
 
         return ResponseEntity.noContent().build();
+    }
+
+    /**
+     * Assign a mechanic to an appointment.
+     * RESTful endpoint with mechanicId specified in the URL.
+     */
+    @PatchMapping("/{appointmentId}/mechanics/{mechanicId}")
+    @Operation(summary = "Assign mechanic to appointment", 
+               description = "Assigns a specific mechanic to handle this appointment.")
+    @ApiResponses(value = {
+            @ApiResponse(responseCode = "200", description = "Mechanic assigned successfully"),
+            @ApiResponse(responseCode = "400", description = "Invalid mechanic ID or appointment state"),
+            @ApiResponse(responseCode = "404", description = "Appointment or mechanic not found")
+    })
+    public ResponseEntity<AppointmentResource> assignMechanicToAppointment(
+            @PathVariable Long workshopId,
+            @PathVariable Long appointmentId,
+            @PathVariable Long mechanicId) {
+
+        var command = new com.safecar.platform.workshop.domain.model.commands.AssignMechanicToAppointmentCommand(
+                appointmentId, mechanicId);
+        var appointmentOpt = commandService.handle(command);
+
+        if (appointmentOpt.isEmpty())
+            return ResponseEntity.notFound().build();
+
+        var appointmentResource = AppointmentResourceFromAggregateAssembler
+                .toResourceFromAggregate(appointmentOpt.get());
+        return ResponseEntity.ok(appointmentResource);
+    }
+
+    /**
+     * Unassign a specific mechanic from an appointment (RESTful endpoint with validation).
+     * Validates that the mechanicId in the URL matches the currently assigned mechanic.
+     */
+    @DeleteMapping("/{appointmentId}/mechanics/{mechanicId}")
+    @Operation(summary = "Unassign specific mechanic from appointment", 
+               description = "Removes a specific mechanic assignment from this appointment. Validates that the provided mechanicId matches the currently assigned mechanic.")
+    @ApiResponses(value = {
+            @ApiResponse(responseCode = "200", description = "Mechanic unassigned successfully"),
+            @ApiResponse(responseCode = "400", description = "Mechanic not assigned or ID mismatch"),
+            @ApiResponse(responseCode = "404", description = "Appointment not found")
+    })
+    public ResponseEntity<AppointmentResource> unassignSpecificMechanicFromAppointment(
+            @PathVariable Long workshopId,
+            @PathVariable Long appointmentId,
+            @PathVariable Long mechanicId) {
+
+        // First, get the appointment to validate the mechanic assignment
+        var query = new GetAppointmentByIdQuery(appointmentId);
+        var appointmentOpt = queryService.handle(query);
+
+        if (appointmentOpt.isEmpty())
+            return ResponseEntity.notFound().build();
+
+        var appointment = appointmentOpt.get();
+
+        // Validate that a mechanic is assigned
+        if (appointment.getMechanicId() == null)
+            return ResponseEntity.badRequest().build(); // No mechanic assigned
+
+        // Validate that the mechanicId in URL matches the assigned mechanic
+        if (!appointment.getMechanicId().equals(mechanicId))
+            return ResponseEntity.badRequest().build(); // Mechanic ID mismatch
+
+        // Proceed with unassignment
+        var command = new com.safecar.platform.workshop.domain.model.commands.UnassignMechanicFromAppointmentCommand(
+                appointmentId);
+        var updatedAppointmentOpt = commandService.handle(command);
+
+        if (updatedAppointmentOpt.isEmpty())
+            return ResponseEntity.notFound().build();
+
+        var appointmentResource = AppointmentResourceFromAggregateAssembler
+                .toResourceFromAggregate(updatedAppointmentOpt.get());
+        return ResponseEntity.ok(appointmentResource);
     }
 }

@@ -3,6 +3,7 @@ package com.safecar.platform.workshop.domain.model.aggregates;
 import com.safecar.platform.shared.domain.model.aggregates.AuditableAbstractAggregateRoot;
 import com.safecar.platform.workshop.domain.model.commands.CreateAppointmentCommand;
 import com.safecar.platform.workshop.domain.model.entities.AppointmentNote;
+import com.safecar.platform.workshop.domain.model.entities.ServiceType;
 import com.safecar.platform.workshop.domain.model.events.*;
 import com.safecar.platform.workshop.domain.model.valueobjects.*;
 
@@ -15,11 +16,62 @@ import java.util.List;
 /**
  * Workshop Appointment Aggregate - This aggregate Root represents an
  * appointment in the workshop operations context.
+ * 
+ * This appointment has its own identity (workshop/vehicle/driver) and includes
+ * service type information and optional mechanic assignment.
  */
 @Getter
 @Entity
 @Table(name = "workshop_appointments")
 public class Appointment extends AuditableAbstractAggregateRoot<Appointment> {
+
+    /**
+     * Workshop Identifier - The workshop where this appointment is scheduled.
+     */
+    @Embedded
+    @AttributeOverrides({
+            @AttributeOverride(name = "workshopId", column = @Column(name = "workshop_id", nullable = false))
+    })
+    private WorkshopId workshopId;
+
+    /**
+     * Vehicle Identifier - The vehicle for which this appointment is scheduled.
+     */
+    @Embedded
+    @AttributeOverrides({
+            @AttributeOverride(name = "vehicleId", column = @Column(name = "vehicle_id", nullable = false))
+    })
+    private VehicleId vehicleId;
+
+    /**
+     * Driver Identifier - The driver who owns the vehicle.
+     */
+    @Embedded
+    @AttributeOverrides({
+            @AttributeOverride(name = "driverId", column = @Column(name = "driver_id", nullable = false))
+    })
+    private DriverId driverId;
+
+    /**
+     * Service Type - The type of service requested for this appointment.
+     * Follows the same pattern as Role in IAM bounded context.
+     */
+    @ManyToOne(fetch = FetchType.EAGER)
+    @JoinColumn(name = "service_type_id", nullable = false)
+    private ServiceType serviceType;
+
+    /**
+     * Custom Service Description - Optional detailed description when service type is CUSTOM.
+     */
+    @Column(name = "custom_service_description", length = 500)
+    private String customServiceDescription;
+
+    /**
+     * Mechanic Identifier - The mechanic assigned to this appointment (optional).
+     * Nullable because not all appointments have an assigned mechanic immediately.
+     */
+    @Column(name = "mechanic_id")
+    private Long mechanicId;
 
     /**
      * Appointment Status - This enum represents the various states an appointment
@@ -41,18 +93,6 @@ public class Appointment extends AuditableAbstractAggregateRoot<Appointment> {
     private ServiceSlot scheduledAt;
 
     /**
-     * Service Order Reference - Reference to the service order that contains all
-     * entity IDs.
-     * This eliminates redundancy of workshop, vehicle, and driver IDs by using the
-     * service order as single source.
-     * The service order contains the complete context of the service (workshop +
-     * vehicle + driver).
-     */
-    @ManyToOne(fetch = FetchType.EAGER)
-    @JoinColumn(name = "service_order_id")
-    private ServiceOrder serviceOrder;
-
-    /**
      * List of notes - The notes associated with the appointment.
      */
     @OneToMany(mappedBy = "workshopAppointment", cascade = CascadeType.ALL, orphanRemoval = true)
@@ -67,59 +107,27 @@ public class Appointment extends AuditableAbstractAggregateRoot<Appointment> {
     }
 
     /**
-     * Constructs a WorkshopAppointment from a CreateAppointmentCommand and a
-     * ServiceOrder.
+     * Constructs an Appointment from a CreateAppointmentCommand.
      * 
-     * @param command      The command containing appointment details
-     * @param serviceOrder The service order that contains all related entity IDs
+     * @param command The command containing appointment details (workshop, vehicle, driver, slot, serviceType)
      */
-    public Appointment(CreateAppointmentCommand command, ServiceOrder serviceOrder) {
+    public Appointment(CreateAppointmentCommand command) {
         this();
+        this.workshopId = command.workshopId();
+        this.vehicleId = command.vehicleId();
+        this.driverId = command.driverId();
         this.scheduledAt = command.slot();
-        this.serviceOrder = serviceOrder;
+        this.serviceType = ServiceType.validateServiceType(command.serviceType());
+        this.customServiceDescription = command.customServiceDescription();
 
         registerEvent(new AppointmentCreatedEvent(
                 this.getId(),
-                serviceOrder.getWorkshop(),
-                serviceOrder.getVehicle(),
-                serviceOrder.getDriver(),
+                this.workshopId,
+                this.vehicleId,
+                this.driverId,
                 this.scheduledAt,
-                serviceOrder.getId()));
-    }
-
-    /**
-     * Link to Service Order - Links this appointment to a service order using the
-     * service order code.
-     * 
-     * @param code The service order code to link to
-     */
-    public void linkToServiceOrder(ServiceOrderCode code) {
-        if (code == null)
-            throw new IllegalArgumentException("Service order code cannot be null");
-        // This method kept for backward compatibility; it requires repository
-        // resolution
-        throw new UnsupportedOperationException(
-                "linkToServiceOrder(code) is not supported; use service to resolve service order id and call updateServiceOrder(serviceOrderId, code)");
-    }
-
-    /**
-     * Update Service Order - Changes the service order associated with this
-     * appointment.
-     * 
-     * @param newServiceOrder the new service order to link to
-     * @param code            service order code used for validation
-     */
-    public void updateServiceOrder(ServiceOrder newServiceOrder, ServiceOrderCode code) {
-        if (code == null)
-            throw new IllegalArgumentException("Service order code cannot be null");
-        if (newServiceOrder == null)
-            throw new IllegalArgumentException("Service order cannot be null");
-
-        // Validation that workshops match
-        if (!this.serviceOrder.getWorkshop().workshopId().equals(newServiceOrder.getWorkshop().workshopId()))
-            throw new IllegalStateException("New service order must be from the same workshop");
-
-        this.serviceOrder = newServiceOrder;
+                null  // Removed workOrderId parameter
+        ));
     }
 
     /**
@@ -179,61 +187,30 @@ public class Appointment extends AuditableAbstractAggregateRoot<Appointment> {
     }
 
     /**
-     * Get Service Order ID - Gets the ID of the associated service order.
+     * Get Workshop ID - Gets the workshop ID associated with this appointment.
      * 
-     * @return the service order ID
+     * @return WorkshopId of this appointment
      */
-    public Long getServiceOrderId() {
-        return serviceOrder != null ? serviceOrder.getId() : null;
+    public WorkshopId getWorkshopId() {
+        return this.workshopId;
     }
 
     /**
-     * Get Service Order - Gets the associated service order.
+     * Get Vehicle ID - Gets the vehicle ID associated with this appointment.
      * 
-     * @return the service order
+     * @return VehicleId of this appointment
      */
-    public ServiceOrder getServiceOrder() {
-        return serviceOrder;
+    public VehicleId getVehicleId() {
+        return this.vehicleId;
     }
 
     /**
-     * Is Linked To Service Order - This method checks if the appointment is linked
-     * to a service order.
+     * Get Driver ID - Gets the driver ID associated with this appointment.
      * 
-     * @return true if linked to a service order, false otherwise
+     * @return DriverId of this appointment
      */
-    public boolean isLinkedToServiceOrder() {
-        return serviceOrder != null;
-    }
-
-    // Convenience methods to access IDs from the associated ServiceOrder (avoiding
-    // redundancy)
-
-    /**
-     * Get Workshop ID - Gets workshop ID from the associated service order
-     * 
-     * @return WorkshopId from service order, null if no service order linked
-     */
-    public WorkshopId getWorkshop() {
-        return serviceOrder != null ? serviceOrder.getWorkshop() : null;
-    }
-
-    /**
-     * Get Vehicle ID - Gets vehicle ID from the associated service order
-     * 
-     * @return VehicleId from service order, null if no service order linked
-     */
-    public VehicleId getVehicle() {
-        return serviceOrder != null ? serviceOrder.getVehicle() : null;
-    }
-
-    /**
-     * Get Driver ID - Gets driver ID from the associated service order
-     * 
-     * @return DriverId from service order, null if no service order linked
-     */
-    public DriverId getDriver() {
-        return serviceOrder != null ? serviceOrder.getDriver() : null;
+    public DriverId getDriverId() {
+        return this.driverId;
     }
 
     /**
@@ -259,15 +236,6 @@ public class Appointment extends AuditableAbstractAggregateRoot<Appointment> {
      */
     public List<AppointmentNote> getNotes() {
         return new ArrayList<>(this.notes);
-    }
-
-    /**
-     * Get WorkshopId as Long
-     * 
-     * @return Long value of the WorkshopId
-     */
-    public Long getWorkshopId() {
-        return this.getWorkshop().workshopId();
     }
 
     public boolean updateAppointmentStatus(AppointmentStatus newAppointmentStatus) {
@@ -300,6 +268,37 @@ public class Appointment extends AuditableAbstractAggregateRoot<Appointment> {
         }
 
         return false;
+    }
+
+    /**
+     * Assign Mechanic - Assigns a mechanic to this appointment.
+     * 
+     * @param mechanicId The ID of the mechanic to assign
+     */
+    public void assignMechanic(Long mechanicId) {
+        if (mechanicId == null)
+            throw new IllegalArgumentException("Mechanic ID cannot be null");
+
+        if (AppointmentStatus.COMPLETED.equals(this.status) || AppointmentStatus.CANCELLED.equals(this.status))
+            throw new IllegalStateException("Cannot assign mechanic to completed or cancelled appointments");
+
+        this.mechanicId = mechanicId;
+        registerEvent(new MechanicAssignedToAppointmentEvent(this.getId(), mechanicId));
+    }
+
+    /**
+     * Unassign Mechanic - Removes the mechanic assignment from this appointment.
+     */
+    public void unassignMechanic() {
+        if (this.mechanicId == null)
+            throw new IllegalStateException("No mechanic is currently assigned to this appointment");
+
+        if (AppointmentStatus.COMPLETED.equals(this.status))
+            throw new IllegalStateException("Cannot unassign mechanic from completed appointments");
+
+        var previousMechanicId = this.mechanicId;
+        this.mechanicId = null;
+        registerEvent(new MechanicUnassignedFromAppointmentEvent(this.getId(), previousMechanicId));
     }
 
 }

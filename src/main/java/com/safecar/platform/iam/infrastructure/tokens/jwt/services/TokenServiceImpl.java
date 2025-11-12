@@ -25,7 +25,6 @@ public class TokenServiceImpl implements BearerTokenService {
     private final Logger LOGGER = LoggerFactory.getLogger(TokenServiceImpl.class);
     private static final String AUTHORIZATION_HEADER = "Authorization";
     private static final String BEARER_TOKEN_PREFIX = "Bearer ";
-    private static final int TOKEN_START_INDEX = 7;
 
     @Value("${authorization.jwt.secret}")
     private String secret;
@@ -49,18 +48,6 @@ public class TokenServiceImpl implements BearerTokenService {
         return claimsResolvers.apply(claims);
     }
 
-    private boolean isTokenPresentIn(String authorizationParameter) {
-        return authorizationParameter.startsWith(BEARER_TOKEN_PREFIX);
-    }
-
-    private String extractTokenFrom(String authorizationParameter) {
-        return authorizationParameter.substring(TOKEN_START_INDEX);
-    }
-
-    private String getAuthorizationParameterFrom(HttpServletRequest request) {
-        return request.getHeader(AUTHORIZATION_HEADER);
-    }
-
     private String buildTokenWithDefaultParameters(String userId) {
         var issuedAt = new Date();
         var expiration = DateUtils.addDays(issuedAt, expirationDays);
@@ -71,10 +58,6 @@ public class TokenServiceImpl implements BearerTokenService {
                 .expiration(expiration)
                 .signWith(key)
                 .compact();
-    }
-
-    private boolean isBearerTokenIn(String authorizationParameter) {
-        return authorizationParameter.startsWith(BEARER_TOKEN_PREFIX);
     }
 
     @Override

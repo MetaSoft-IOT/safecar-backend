@@ -2,7 +2,6 @@ package com.safecar.platform.profiles.interfaces.rest;
 
 import static org.springframework.http.HttpStatus.CREATED;
 
-import jakarta.validation.Valid;
 import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.GetMapping;

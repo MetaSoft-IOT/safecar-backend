@@ -6,6 +6,7 @@ import com.safecar.platform.profiles.interfaces.rest.resource.BusinessProfileRes
 public class BusinessProfileResourceFromEntityAssembler {
     public static BusinessProfileResource toResourceFromEntity(BusinessProfile entity) {
         return new BusinessProfileResource(
+                entity.getId(),
                 entity.getBusinessName(),
                 entity.getRuc(),
                 entity.getBusinessAddress(),

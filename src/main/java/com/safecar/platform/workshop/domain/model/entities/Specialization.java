@@ -1,7 +1,5 @@
 package com.safecar.platform.workshop.domain.model.entities;
 
-import java.util.Set;
-
 import lombok.Data;
 import lombok.NoArgsConstructor;
 import lombok.AllArgsConstructor;
@@ -57,15 +55,6 @@ public class Specialization {
     }
 
     /**
-     * Returns the default specialization, which is {@link Specializations#ENGINE}.
-     *
-     * @return the default engine specialization
-     */
-    public static Specialization getDefaultSpecialization() {
-        return new Specialization(Specializations.ENGINE);
-    }
-
-    /**
      * Creates a specialization from the given string name.
      *
      * @param name the name of the specialization as a string
@@ -77,35 +66,11 @@ public class Specialization {
     }
 
     /**
-     * Validates the provided set of specializations.
-     * If the set is null or empty, returns a set containing the default specialization.
-     *
-     * @param specializations the set of specializations to validate
-     * @return a non-empty set of specializations
-     */
-    public static Set<Specialization> validateSpecializations(Set<Specialization> specializations) {
-        return specializations == null || specializations.isEmpty() 
-            ? Set.of(getDefaultSpecialization()) 
-            : specializations;
-    }
-
-    /**
      * Returns the string representation of the specialization's name.
      *
      * @return the name of the specialization as a string
      */
     public String getStringName() {
         return this.name.name();
-    }
-
-    /**
-     * Creates a specialization from the given string name.
-     *
-     * @param name the name of the specialization as a string
-     * @return the corresponding {@code Specialization} instance
-     * @throws IllegalArgumentException if the name does not match any specialization
-     */
-    public static Specialization create(String name) {
-        return new Specialization(Specializations.valueOf(name.toUpperCase()));
     }
 }

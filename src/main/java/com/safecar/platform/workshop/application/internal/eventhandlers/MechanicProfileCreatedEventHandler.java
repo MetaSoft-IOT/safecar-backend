@@ -1,9 +1,7 @@
 package com.safecar.platform.workshop.application.internal.eventhandlers;
 
-import org.springframework.scheduling.annotation.Async;
+import org.springframework.context.event.EventListener;
 import org.springframework.stereotype.Component;
-import org.springframework.transaction.event.TransactionalEventListener;
-import org.springframework.transaction.event.TransactionPhase;
 
 import com.safecar.platform.shared.domain.model.events.ProfileCreatedEvent;
 import com.safecar.platform.workshop.domain.model.commands.CreateMechanicCommand;
@@ -34,20 +32,21 @@ public class MechanicProfileCreatedEventHandler {
     /**
      * Handles the {@link ProfileCreatedEvent} by creating a basic Mechanic
      * with default values when the user has ROLE_MECHANIC. The mechanic can be
-     * updated later through Workshop BC endpoints.
+     * updated later through Workshop BC endpoints to assign workshop and update metrics.
      * 
      * @param event the {@link ProfileCreatedEvent} instance
      */
-    @TransactionalEventListener(phase = TransactionPhase.AFTER_COMMIT)
-    @Async
+    @EventListener
     public void on(ProfileCreatedEvent event) {
         var isMechanic = event.userRoles().contains("ROLE_MECHANIC");
 
         if (isMechanic) {
-        var command = new CreateMechanicCommand(
-            event.profileId(),
-            null,
-            0);
+
+            var command = new CreateMechanicCommand(
+                    event.profileId(),
+                    null, 
+                    null, 
+                    0);
 
             commandService.handle(command);
         }

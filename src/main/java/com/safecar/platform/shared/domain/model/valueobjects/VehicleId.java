@@ -35,15 +35,6 @@ public record VehicleId(
     }
     
     /**
-     * Validates that the vehicle ID is valid for business operations
-     * @return true if valid, false otherwise
-     */
-    public boolean isValid() {
-        return vehicleId != null && vehicleId > 0 && 
-               plateNumber != null && !plateNumber.trim().isEmpty();
-    }
-    
-    /**
      * Creates a VehicleId from values with validation
      * @param id the vehicle ID
      * @param plate the plate number

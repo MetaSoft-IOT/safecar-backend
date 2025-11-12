@@ -3,16 +3,15 @@ package com.safecar.platform.workshop.interfaces.rest;
 import com.safecar.platform.workshop.domain.model.queries.GetWorkshopByIdQuery;
 import com.safecar.platform.workshop.domain.services.WorkshopCommandService;
 import com.safecar.platform.workshop.domain.services.WorkshopQueryService;
-import com.safecar.platform.workshop.interfaces.rest.resources.CreateWorkshopResource;
 import com.safecar.platform.workshop.interfaces.rest.resources.WorkshopResource;
-import com.safecar.platform.workshop.interfaces.rest.transform.CreateWorkshopCommandFromResourceAssembler;
+import com.safecar.platform.workshop.interfaces.rest.resources.UpdateWorkshopResource;
 import com.safecar.platform.workshop.interfaces.rest.transform.WorkshopEntityResourceFromEntityAssembler;
+import com.safecar.platform.workshop.interfaces.rest.transform.UpdateWorkshopCommandFromResourceAssembler;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.Parameter;
 import io.swagger.v3.oas.annotations.responses.ApiResponse;
 import io.swagger.v3.oas.annotations.responses.ApiResponses;
 import io.swagger.v3.oas.annotations.tags.Tag;
-import org.springframework.http.HttpStatus;
 import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
@@ -26,7 +25,7 @@ import org.springframework.web.bind.annotation.*;
  * operations/metrics
  */
 @RestController
-@RequestMapping(value = "/api/v1/workshop", produces = MediaType.APPLICATION_JSON_VALUE)
+@RequestMapping(value = "/api/v1/workshops", produces = MediaType.APPLICATION_JSON_VALUE)
 @Tag(name = "Workshops", description = "Workshop entity management endpoints")
 public class WorkshopsController {
 
@@ -40,34 +39,6 @@ public class WorkshopsController {
     }
 
     /**
-     * Creates a new workshop.
-     *
-     * @param createWorkshopResource the {@link CreateWorkshopResource} resource
-     * @return the {@link WorkshopResource} resource
-     */
-    @Operation(summary = "Create a new workshop")
-    @ApiResponses(value = {
-            @ApiResponse(responseCode = "201", description = "Workshop created successfully"),
-            @ApiResponse(responseCode = "400", description = "Bad request"),
-            @ApiResponse(responseCode = "409", description = "Workshop already exists for business profile")
-    })
-    @PostMapping
-    public ResponseEntity<WorkshopResource> createWorkshop(
-            @RequestBody CreateWorkshopResource createWorkshopResource) {
-
-        var createWorkshopCommand = CreateWorkshopCommandFromResourceAssembler
-                .toCommandFromResource(createWorkshopResource);
-        var workshop = workshopCommandService.handle(createWorkshopCommand);
-
-        if (workshop.isEmpty())
-            return ResponseEntity.badRequest().build();
-
-        var workshopResource = WorkshopEntityResourceFromEntityAssembler
-                .toResourceFromEntity(workshop.get());
-        return new ResponseEntity<>(workshopResource, HttpStatus.CREATED);
-    }
-
-    /**
      * Gets a workshop by its ID.
      *
      * @param workshopId the workshop ID
@@ -78,7 +49,7 @@ public class WorkshopsController {
             @ApiResponse(responseCode = "200", description = "Workshop found"),
             @ApiResponse(responseCode = "404", description = "Workshop not found")
     })
-    @GetMapping("/{workshopId}")
+        @GetMapping("/{workshopId}")
     public ResponseEntity<WorkshopResource> getWorkshopById(
             @Parameter(required = true) @PathVariable Long workshopId) {
 
@@ -92,4 +63,23 @@ public class WorkshopsController {
                 .toResourceFromEntity(workshop.get());
         return ResponseEntity.ok(workshopResource);
     }
+        /**
+         * Partially update a workshop (currently only description).
+         */
+        @Operation(summary = "Update workshop")
+        @ApiResponses(value = {
+                        @ApiResponse(responseCode = "200", description = "Workshop updated"),
+                        @ApiResponse(responseCode = "404", description = "Workshop not found")
+        })
+        @PatchMapping("/{workshopId}")
+        public ResponseEntity<WorkshopResource> updateWorkshop(
+                        @PathVariable Long workshopId,
+                        @RequestBody UpdateWorkshopResource resource) {
+
+                var command = UpdateWorkshopCommandFromResourceAssembler.toCommandFromResource(workshopId, resource);
+                var result = workshopCommandService.handle(command);
+                if (result.isEmpty()) return ResponseEntity.notFound().build();
+                var workshopResource = WorkshopEntityResourceFromEntityAssembler.toResourceFromEntity(result.get());
+                return ResponseEntity.ok(workshopResource);
+        }
 }

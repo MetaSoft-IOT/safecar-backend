@@ -13,54 +13,53 @@ import java.time.Instant;
 import java.util.List;
 
 /**
- * Workshop Appointment Repository - JPA Implementation to manage WorkshopAppointment entities.
+ * Repository for querying workshop appointments.
  */
 @Repository
 public interface AppointmentRepository extends JpaRepository<Appointment, Long> {
 
-   /**
-    * Finds all WorkshopAppointments for a given WorkshopId.
-    * @param workshopId the ID of the workshop
-    * @return list of WorkshopAppointments associated with the specified workshop
-    */
-    List<Appointment> findByServiceOrderWorkshop(WorkshopId workshopId);
     /**
-     * Finds all WorkshopAppointments for a given VehicleId.
+     * Finds all Appointments for a given WorkshopId.
+     * @param workshopId the ID of the workshop
+     * @return list of Appointments associated with the specified workshop
+     */
+    List<Appointment> findByWorkshopId(WorkshopId workshopId);
+
+    /**
+     * Finds all Appointments for a given VehicleId.
      * @param vehicleId the ID of the vehicle
-     * @return list of WorkshopAppointments associated with the specified vehicle
+     * @return list of Appointments associated with the specified vehicle
      */
-    List<Appointment> findByServiceOrderVehicle(VehicleId vehicleId);
-    /*
-     * Finds all WorkshopAppointments for a given DriverId.
+    List<Appointment> findByVehicleId(VehicleId vehicleId);
+
+    /**
+     * Finds all Appointments for a given DriverId.
      * @param driverId the ID of the driver
-     * @return list of WorkshopAppointments associated with the specified driver
+     * @return list of Appointments associated with the specified driver
      */
-    List<Appointment> findByServiceOrderDriver(DriverId driverId);
+    List<Appointment> findByDriverId(DriverId driverId);
+
     /**
-     * Finds all WorkshopAppointments linked to a specific Service Order ID.
-     * @param serviceOrderId the ID of the linked service order
-     * @return list of WorkshopAppointments associated with the specified service order
-     */
-    List<Appointment> findByServiceOrder_Id(Long serviceOrderId);
-    /**
-     * Finds all WorkshopAppointments with a specific status.
+     * Finds all Appointments with a specific status.
      * @param status the status of the appointment
-     * @return list of WorkshopAppointments with the specified status
+     * @return list of Appointments with the specified status
      */
     List<Appointment> findByStatus(AppointmentStatus status);
+
     /**
-     * Finds all WorkshopAppointments scheduled between the specified start and end dates.
+     * Finds all Appointments scheduled between the specified start and end dates.
      * @param startDate the start date of the appointment
      * @param endDate the end date of the appointment
-     * @return list of WorkshopAppointments scheduled between the specified dates
+     * @return list of Appointments scheduled between the specified dates
      */
     List<Appointment> findByScheduledAtStartAtBetween(Instant startDate, Instant endDate);
+
     /**
-     * Finds all WorkshopAppointments for a specific WorkshopId scheduled between the specified start and end dates.
+     * Finds all Appointments for a specific WorkshopId scheduled between the specified start and end dates.
      * @param workshopId the ID of the workshop
      * @param startDate the start date of the appointment
      * @param endDate the end date of the appointment
-     * @return list of WorkshopAppointments for the specified workshop scheduled between the specified dates
+     * @return list of Appointments for the specified workshop scheduled between the specified dates
      */
-    List<Appointment> findByServiceOrderWorkshopAndScheduledAtStartAtBetween(WorkshopId workshopId, Instant startDate, Instant endDate);
+    List<Appointment> findByWorkshopIdAndScheduledAtStartAtBetween(WorkshopId workshopId, Instant startDate, Instant endDate);
 }

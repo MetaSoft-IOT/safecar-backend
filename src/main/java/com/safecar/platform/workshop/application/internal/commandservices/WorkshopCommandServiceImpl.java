@@ -4,6 +4,7 @@ import com.safecar.platform.profiles.interfaces.acl.ProfilesContextFacade;
 import com.safecar.platform.shared.domain.model.valueobjects.ProfileId;
 import com.safecar.platform.workshop.domain.model.aggregates.Workshop;
 import com.safecar.platform.workshop.domain.model.commands.CreateWorkshopCommand;
+import com.safecar.platform.workshop.domain.model.commands.UpdateWorkshopCommand;
 import com.safecar.platform.workshop.domain.services.WorkshopCommandService;
 import com.safecar.platform.workshop.infrastructure.persistence.jpa.repositories.WorkshopRepository;
 import org.springframework.stereotype.Service;
@@ -42,5 +43,17 @@ public class WorkshopCommandServiceImpl implements WorkshopCommandService {
         var workshop = new Workshop(command);
         var savedWorkshop = workshopRepository.save(workshop);
         return Optional.of(savedWorkshop);
+    }
+
+    @Override
+    public Optional<Workshop> handle(UpdateWorkshopCommand command) {
+    Long id = command.workshopId();
+    if (id == null) return Optional.empty();
+    var workshopOpt = workshopRepository.findById(id);
+        if (workshopOpt.isEmpty()) return Optional.empty();
+        var workshop = workshopOpt.get();
+        workshop.updateDescription(command.workshopDescription());
+        var updated = workshopRepository.save(workshop);
+        return Optional.of(updated);
     }
 }

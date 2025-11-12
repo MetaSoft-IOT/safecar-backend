@@ -21,14 +21,6 @@ public interface AppointmentCommandService {
     Optional<Appointment> handle(CreateAppointmentCommand command);
 
     /**
-     * Handles linking an appointment to a service order.
-     * 
-     * @param command The {@link LinkAppointmentToServiceOrderCommand} command
-     *                containing linking details
-     */
-    Optional<Appointment> handle(LinkAppointmentToServiceOrderCommand command);
-
-    /**
      * Handles rescheduling an existing appointment.
      * 
      * @param command The {@link RescheduleAppointmentCommand} command containing
@@ -51,4 +43,21 @@ public interface AppointmentCommandService {
      *                details
      */
     void handle(AddAppointmentNoteCommand command);
+
+    /**
+     * Handles assigning a mechanic to an appointment.
+     * 
+     * @param command The {@link AssignMechanicToAppointmentCommand} command containing
+     *                mechanic assignment details
+     * @return The updated appointment
+     */
+    Optional<Appointment> handle(AssignMechanicToAppointmentCommand command);
+
+    /**
+     * Handles unassigning a mechanic from an appointment.
+     * 
+     * @param command The {@link UnassignMechanicFromAppointmentCommand} command
+     * @return The updated appointment
+     */
+    Optional<Appointment> handle(UnassignMechanicFromAppointmentCommand command);
 }

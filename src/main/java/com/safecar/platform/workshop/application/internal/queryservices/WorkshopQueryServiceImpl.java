@@ -1,6 +1,5 @@
 package com.safecar.platform.workshop.application.internal.queryservices;
 
-import com.safecar.platform.shared.domain.model.valueobjects.ProfileId;
 import com.safecar.platform.workshop.domain.model.aggregates.Workshop;
 import com.safecar.platform.workshop.domain.model.queries.GetWorkshopByIdQuery;
 import com.safecar.platform.workshop.domain.services.WorkshopQueryService;

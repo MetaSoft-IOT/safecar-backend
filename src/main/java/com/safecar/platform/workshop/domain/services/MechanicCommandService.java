@@ -1,6 +1,7 @@
 package com.safecar.platform.workshop.domain.services;
 
 import com.safecar.platform.workshop.domain.model.aggregates.Mechanic;
+import com.safecar.platform.workshop.domain.model.commands.AssignMechanicToWorkshopCommand;
 import com.safecar.platform.workshop.domain.model.commands.CreateMechanicCommand;
 import com.safecar.platform.workshop.domain.model.commands.UpdateMechanicMetricsCommand;
 
@@ -29,9 +30,17 @@ public interface MechanicCommandService {
      * 
      * @param command   The {@link UpdateMechanicMetricsCommand} command containing
      *                  mechanic update details
-     * @param profileId the ID of the mechanic profile to update
+     * @param mechanicId the ID of the mechanic to update
      * @return an Optional containing the updated Mechanic, or empty if update
      *         failed
      */
     Optional<Mechanic> handle(UpdateMechanicMetricsCommand command, Long mechanicId);
+
+    /**
+     * Handles assigning a mechanic to a workshop.
+     * 
+     * @param command The {@link AssignMechanicToWorkshopCommand} command
+     * @return an Optional containing the updated Mechanic, or empty if assignment failed
+     */
+    Optional<Mechanic> handle(AssignMechanicToWorkshopCommand command);
 }

@@ -25,13 +25,15 @@ public class AppointmentResourceFromAggregateAssembler {
 
         return new AppointmentResource(
                 aggregate.getId(),
-                aggregate.getWorkshop().workshopId(),
-                aggregate.getVehicle().vehicleId(),
-                aggregate.getDriver().driverId(),
-                aggregate.getServiceOrderId(),
+                aggregate.getWorkshopId().workshopId(),
+                aggregate.getVehicleId().vehicleId(),
+                aggregate.getDriverId().driverId(),
                 aggregate.getScheduledAt().startAt(),
                 aggregate.getScheduledAt().endAt(),
                 aggregate.getStatus().name(),
+                aggregate.getServiceType() != null ? aggregate.getServiceType().getStringName() : null,
+                aggregate.getCustomServiceDescription(),
+                aggregate.getMechanicId(),
                 notes);
     }
 }

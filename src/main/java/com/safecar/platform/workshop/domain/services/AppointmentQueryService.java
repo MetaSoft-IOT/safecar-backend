@@ -30,13 +30,4 @@ public interface AppointmentQueryService {
      * @return a list of WorkshopAppointments
      */
     List<Appointment> handle(GetAppointmentsByWorkshopAndRangeQuery query);
-
-    /**
-     * Handles retrieving appointments by work order code.
-     * 
-     * @param query The {@link GetAppointmentsByServiceOrderQuery} query containing the
-     *              service order ID
-     * @return List of workshop appointments linked to the service order
-     */
-    List<Appointment> handle(GetAppointmentsByServiceOrderQuery query);
 }

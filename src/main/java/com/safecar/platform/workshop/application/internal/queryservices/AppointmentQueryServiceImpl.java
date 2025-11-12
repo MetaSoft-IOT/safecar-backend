@@ -1,5 +1,6 @@
 package com.safecar.platform.workshop.application.internal.queryservices;
 
+import java.time.Instant;
 import java.util.List;
 import java.util.Optional;
 
@@ -39,18 +40,20 @@ public class AppointmentQueryServiceImpl implements AppointmentQueryService {
      */
     @Override
     public List<Appointment> handle(GetAppointmentsByWorkshopAndRangeQuery query) {
-        return repository.findByServiceOrderWorkshopAndScheduledAtStartAtBetween(
+        // If both from and to are null, return all appointments for the workshop
+        if (query.from() == null && query.to() == null) {
+            return repository.findByWorkshopId(query.workshopId());
+        }
+        
+        // If only one of them is null, we need special handling
+        // If from is null, use a very early date; if to is null, use a far future date
+        Instant fromDate = query.from() != null ? query.from() : Instant.EPOCH;
+        Instant toDate = query.to() != null ? query.to() : Instant.ofEpochSecond(4102444800L); // 2100-01-01
+        
+        return repository.findByWorkshopIdAndScheduledAtStartAtBetween(
             query.workshopId(), 
-            query.from(), 
-            query.to()
+            fromDate, 
+            toDate
         );
-    }
-
-    /**
-     * {@inheritDoc}
-     */
-    @Override
-    public List<Appointment> handle(GetAppointmentsByServiceOrderQuery query) {
-        return repository.findByServiceOrder_Id(query.serviceOrderId());
     }
 }

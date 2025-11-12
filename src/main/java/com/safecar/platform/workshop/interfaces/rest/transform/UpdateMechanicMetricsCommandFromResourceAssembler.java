@@ -1,6 +1,9 @@
 package com.safecar.platform.workshop.interfaces.rest.transform;
 
+import java.util.Set;
+
 import com.safecar.platform.workshop.domain.model.commands.UpdateMechanicMetricsCommand;
+import com.safecar.platform.workshop.domain.model.entities.Specialization;
 import com.safecar.platform.workshop.interfaces.rest.resources.UpdateMechanicMetricsResource;
 
 /**
@@ -8,6 +11,10 @@ import com.safecar.platform.workshop.interfaces.rest.resources.UpdateMechanicMet
  * <p>
  * Transforms REST resources into domain commands for clean separation of
  * concerns.
+ * 
+ * NOTE: This assembler creates transient Specialization entities.
+ * The CommandService is responsible for fetching the persisted entities
+ * from the database before updating the Mechanic.
  * </p>
  */
 public class UpdateMechanicMetricsCommandFromResourceAssembler {
@@ -17,14 +24,15 @@ public class UpdateMechanicMetricsCommandFromResourceAssembler {
      * {@link UpdateMechanicMetricsCommand}
      * 
      * @param resource the resource to transform
-     * @return the transformed command
+     * @return the transformed command with transient Specialization entities
      */
     public static UpdateMechanicMetricsCommand toCommandFromResource(UpdateMechanicMetricsResource resource) {
-        var specializations = SpecializationSetFromStringAssembler
+        // Create transient specializations - CommandService will fetch persisted ones
+        Set<Specialization> transientSpecializations = SpecializationSetFromStringAssembler
                 .toSpecializationSetFromStringSet(resource.specializations());
 
-    return new UpdateMechanicMetricsCommand(
-        specializations,
-        resource.yearsOfExperience());
+        return new UpdateMechanicMetricsCommand(
+                transientSpecializations,
+                resource.yearsOfExperience());
     }
 }

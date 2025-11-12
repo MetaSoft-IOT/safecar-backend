@@ -23,6 +23,7 @@ import lombok.Getter;
  * Mechanic aggregate
  * <p>
  * Represents a mechanic in the workshop domain.
+ * A mechanic belongs to a single workshop and has specializations.
  * </p>
  */
 @Entity
@@ -32,6 +33,13 @@ public class Mechanic extends AuditableAbstractAggregateRoot<Mechanic> {
     @Embedded
     @Column(name = "profile_id")
     private ProfileId profileId;
+
+    /**
+     * Workshop ID - The workshop to which this mechanic belongs
+     * Nullable initially when mechanic is created automatically from ProfileCreatedEvent
+     */
+    @Column(name = "workshop_id")
+    private Long workshopId;
 
     /**
      * Specializations assigned to the mechanic
@@ -52,25 +60,41 @@ public class Mechanic extends AuditableAbstractAggregateRoot<Mechanic> {
     }
 
     /**
-     * Constructor with ProfileId
+     * Constructor with ProfileId only (for automatic creation from events)
      * 
      * @param profileId the profile id from Profiles BC
      */
     public Mechanic(Long profileId) {
         this();
         this.profileId = new ProfileId(profileId);
+        this.workshopId = null; // Will be assigned later
         this.yearsOfExperience = 0;
     }
 
     /**
-     * Constructor with ProfileId value object
+     * Constructor with ProfileId and WorkshopId
+     * 
+     * @param profileId the profile id from Profiles BC
+     * @param workshopId the workshop id to which this mechanic belongs
+     */
+    public Mechanic(Long profileId, Long workshopId) {
+        this();
+        this.profileId = new ProfileId(profileId);
+        this.workshopId = workshopId;
+        this.yearsOfExperience = 0;
+    }
+
+    /**
+     * Constructor with ProfileId value object and WorkshopId
      * 
      * @param profileId the profile id value object
+     * @param workshopId the workshop id
      * @see ProfileId
      */
-    public Mechanic(ProfileId profileId) {
+    public Mechanic(ProfileId profileId, Long workshopId) {
         this();
         this.profileId = profileId;
+        this.workshopId = workshopId;
         this.yearsOfExperience = 0;
     }
 
@@ -78,16 +102,25 @@ public class Mechanic extends AuditableAbstractAggregateRoot<Mechanic> {
      * Constructor with all fields
      * 
      * @param profileId         the profile id
+     * @param workshopId        the workshop id (can be null for automatic creation)
      * @param specializations   the specializations of the mechanic
      * @param yearsOfExperience the years of experience
      */
     public Mechanic(Long profileId,
+                    Long workshopId,
                     Set<Specialization> specializations,
                     Integer yearsOfExperience) {
         this();
         this.profileId = new ProfileId(profileId);
+        this.workshopId = workshopId;
         this.yearsOfExperience = yearsOfExperience == null ? 0 : Math.max(0, yearsOfExperience);
-        this.specializations = Specialization.validateSpecializations(specializations);
+        // DO NOT create transient Specialization instances here
+        // The CommandService is responsible for fetching persisted entities from DB
+        if (specializations != null && !specializations.isEmpty()) {
+            this.specializations = new HashSet<>(specializations);
+        }
+        // If specializations is null/empty, leave the Set empty
+        // The CommandService will add the default specialization from DB
     }
 
     /**
@@ -97,6 +130,36 @@ public class Mechanic extends AuditableAbstractAggregateRoot<Mechanic> {
      */
     public Long getProfileId() {
         return this.profileId.profileId();
+    }
+
+    /**
+     * Get workshop id
+     * 
+     * @return the workshop id to which this mechanic belongs, or null if not assigned yet
+     */
+    public Long getWorkshopIdValue() {
+        return this.workshopId;
+    }
+
+    /**
+     * Assign mechanic to a workshop
+     * 
+     * @param workshopId the workshop id
+     */
+    public void assignToWorkshop(Long workshopId) {
+        if (workshopId == null || workshopId <= 0) {
+            throw new IllegalArgumentException("Workshop ID must be a positive value");
+        }
+        this.workshopId = workshopId;
+    }
+
+    /**
+     * Check if mechanic is assigned to a workshop
+     * 
+     * @return true if mechanic has a workshop assigned, false otherwise
+     */
+    public boolean hasWorkshopAssigned() {
+        return this.workshopId != null;
     }
 
     /**
@@ -123,27 +186,16 @@ public class Mechanic extends AuditableAbstractAggregateRoot<Mechanic> {
 
     /**
      * Add a set of specializations to the mechanic.
+     * IMPORTANT: The specializations MUST be persisted entities from the database.
      * 
-     * @param specializations the specializations.
+     * @param specializations the specializations (persisted entities).
      * @return the mechanic.
      */
     public Mechanic addSpecializations(Set<Specialization> specializations) {
-        var validatedSpecializations = Specialization.validateSpecializations(specializations);
-        this.specializations.addAll(validatedSpecializations);
-        return this;
-    }
-
-    /**
-     * Add specializations from a list of strings
-     * This method will be used by the command handler to convert from strings to
-     * entities
-     * 
-     * @param specializationNames list of specialization names
-     */
-    public void addSpecializationsFromSet(Set<String> specializationNames) {
-        if (specializationNames != null && !specializationNames.isEmpty()) {
-            this.specializations.add(Specialization.getDefaultSpecialization());
+        if (specializations != null && !specializations.isEmpty()) {
+            this.specializations.addAll(specializations);
         }
+        return this;
     }
 
     /**
@@ -170,17 +222,16 @@ public class Mechanic extends AuditableAbstractAggregateRoot<Mechanic> {
     }
 
     /**
-     * Factory method to create a Mechanic from parameters
+     * Factory method to create a Mechanic from CreateMechanicCommand
      * 
-     * @param profileId         the profile id
-     * @param specializations   the specializations of the mechanic
-     * @param yearsOfExperience the years of experience
+     * @param command the create mechanic command
      * @return a new Mechanic instance
      */
     public static Mechanic create(CreateMechanicCommand command) {
-    return new Mechanic(
-        command.profileId(),
-        command.specializations(),
-        command.yearsOfExperience());
+        return new Mechanic(
+            command.profileId(),
+            command.workshopId(),
+            command.specializations(),
+            command.yearsOfExperience());
     }
 }
