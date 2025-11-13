@@ -1,0 +1,5 @@
+# Railway Ignore File
+# Ignorar archivos de build local que pueden causar conflictos
+target/
+.m2/
+*.class
