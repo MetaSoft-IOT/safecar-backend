@@ -8,4 +8,4 @@ cmds = [
 ]
 
 [start]
-cmd = "bash start.sh"
+cmd = "java -Dserver.port=$PORT -Dspring.profiles.active=prod -Xmx512m -Xms256m -jar target/*.jar"
