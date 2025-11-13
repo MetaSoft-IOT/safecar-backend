@@ -50,10 +50,7 @@ public class ExternalIamService {
             return Optional.empty();
         }
         
-        // TODO: Fetch actual user full name when available in IAM
-        var fullName = "Driver " + userId; // Fallback name until IAM provides full name
-        
-        return Optional.of(new DriverId(userId, fullName));
+        return Optional.of(new DriverId(userId));
     }
 
     /**

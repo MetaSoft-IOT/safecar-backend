@@ -13,11 +13,15 @@ import java.time.Instant;
  * @param driverId   The ID of the driver associated with the appointment.
  * @param startAt    The start time of the appointment.
  * @param endAt      The end time of the appointment.
+ * @param serviceType The type of service requested (e.g., "OIL_CHANGE", "BRAKE_SERVICE").
+ * @param customServiceDescription Optional description when serviceType is "CUSTOM".
  */
 public record CreateAppointmentResource(
         Long workshopId,
         Long vehicleId,
         Long driverId,
         Instant startAt,
-        Instant endAt) {
+        Instant endAt,
+        String serviceType,
+        String customServiceDescription) {
 }

@@ -5,21 +5,16 @@ import java.util.Set;
 import com.safecar.platform.workshop.domain.model.entities.Specialization;
 
 /**
- * Command to create a Mechanic in the Workshop BC.
- * <p>
- * This command contains workshop-specific information for a mechanic,
- * while referencing the PersonProfile from the Profiles BC.
- * </p>
+ * Command to create a new mechanic.
  * 
- * @param profileId the ID of the PersonProfile from Profiles BC
- * @param companyName the name of the workshop company
- * @param specializations set of specializations of the mechanic
- * @param yearsOfExperience years of professional experience
+ * @param profileId the profile id from Profiles BC
+ * @param workshopId the workshop id to which this mechanic belongs
+ * @param specializations the specializations of the mechanic
+ * @param yearsOfExperience the years of experience
  */
 public record CreateMechanicCommand(
         Long profileId,
-        String companyName,
+        Long workshopId,
         Set<Specialization> specializations,
-        Integer yearsOfExperience
-) {
+        Integer yearsOfExperience) {
 }

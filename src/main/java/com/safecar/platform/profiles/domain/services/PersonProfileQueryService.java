@@ -2,7 +2,7 @@ package com.safecar.platform.profiles.domain.services;
 
 import com.safecar.platform.profiles.domain.model.aggregates.PersonProfile;
 import com.safecar.platform.profiles.domain.model.queries.GetPersonProfileByIdQuery;
-import com.safecar.platform.profiles.domain.model.queries.GetPersonProfileByUserIdQuery;
+import com.safecar.platform.profiles.domain.model.queries.GetPersonProfileByUserEmailQuery;
 
 import java.util.Optional;
 
@@ -14,13 +14,13 @@ import java.util.Optional;
  */
 public interface PersonProfileQueryService {
     /**
-     * Handles the query to find a PersonProfile by the associated user ID.
+     * Handles the query to find a PersonProfile by the associated user email.
      * 
-     * @param query the {@link GetPersonProfileByUserIdQuery} containing the user ID
+     * @param query the {@link GetPersonProfileByUserEmailQuery} containing the user email
      * @return an {@link Optional} containing the found {@link PersonProfile}, or
      *         empty if not found
      */
-    Optional<PersonProfile> handle(GetPersonProfileByUserIdQuery query);
+    Optional<PersonProfile> handle(GetPersonProfileByUserEmailQuery query);
 
     /**
      * Handles the query to find a PersonProfile by its ID.

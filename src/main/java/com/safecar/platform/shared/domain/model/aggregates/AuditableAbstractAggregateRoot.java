@@ -48,4 +48,12 @@ public class AuditableAbstractAggregateRoot<T extends AbstractAggregateRoot<T>> 
     @LastModifiedDate
     @Column(nullable = false)
     private Date updatedAt;
+
+    /**
+     * Gets the unique identifier for this aggregate root.
+     * @return the ID of this aggregate root
+     */
+    public Long getId() {
+        return this.id;
+    }
 }

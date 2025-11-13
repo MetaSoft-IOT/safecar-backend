@@ -7,7 +7,6 @@ import io.swagger.v3.oas.annotations.media.Schema;
 import io.swagger.v3.oas.annotations.responses.ApiResponse;
 import io.swagger.v3.oas.annotations.responses.ApiResponses;
 import io.swagger.v3.oas.annotations.tags.Tag;
-import jakarta.validation.Valid;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
@@ -33,7 +32,7 @@ import static org.springframework.util.MimeTypeUtils.APPLICATION_JSON_VALUE;
  * </p>
  */
 @RestController
-@RequestMapping(value = "/api/v1/vehicles", produces = APPLICATION_JSON_VALUE)
+@RequestMapping(value = "/api/v1", produces = APPLICATION_JSON_VALUE)
 @Tag(name = "Vehicles", description = "Vehicle Management Operations")
 public class VehiclesController {
         private final VehicleCommandService commandService;
@@ -63,9 +62,9 @@ public class VehiclesController {
                         @ApiResponse(responseCode = "400", description = "Invalid input data or validation errors", content = @Content),
                         @ApiResponse(responseCode = "409", description = "Vehicle with same license plate already exists", content = @Content)
         })
-        @PostMapping
+        @PostMapping("/vehicles")
         public ResponseEntity<VehicleResource> createVehicle(
-                        @Parameter(description = "Vehicle creation request with all required information") @Valid @RequestBody CreateVehicleResource resource) {
+                        @Parameter @RequestBody CreateVehicleResource resource) {
 
                 var command = CreateVehicleCommandFromVehicleResourceAssembler.toCommandFromVehicleResource(resource);
                 var vehicleOpt = commandService.handle(command);
@@ -92,9 +91,9 @@ public class VehiclesController {
                         @ApiResponse(responseCode = "404", description = "Vehicle not found for the specified ID", content = @Content),
                         @ApiResponse(responseCode = "400", description = "Invalid vehicle ID format", content = @Content)
         })
-        @GetMapping("/{vehicleId}")
+        @GetMapping("/vehicles/{vehicleId}")
         public ResponseEntity<VehicleResource> getVehicleById(
-                        @Parameter(description = "Unique identifier of the vehicle", required = true, example = "1") @PathVariable Long vehicleId) {
+                        @Parameter @PathVariable Long vehicleId) {
 
                 var query = new GetVehicleByIdQuery(vehicleId);
                 var vehicleOpt = vehicleQueryService.handle(query);
@@ -120,9 +119,9 @@ public class VehiclesController {
                         @ApiResponse(responseCode = "400", description = "Invalid driver ID format", content = @Content),
                         @ApiResponse(responseCode = "404", description = "Driver not found", content = @Content)
         })
-        @GetMapping("/driver/{driverId}")
+        @GetMapping(value = "/drivers/{driverId}/vehicles")
         public ResponseEntity<List<VehicleResource>> getVehiclesByDriverId(
-                        @Parameter(description = "Unique identifier of the driver", required = true, example = "12345") @PathVariable Long driverId) {
+                        @Parameter @PathVariable Long driverId) {
 
                 var query = new GetVehicleByDriverIdQuery(driverId);
                 var vehicles = vehicleQueryService.handle(query);

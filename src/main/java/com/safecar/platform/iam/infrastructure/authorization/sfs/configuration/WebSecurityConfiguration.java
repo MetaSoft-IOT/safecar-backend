@@ -117,7 +117,7 @@ public class WebSecurityConfiguration {
         // URLs we leave unsecured (including Swagger/OpenAPI and Profiles for testing)
         String[] publicMatchers = {
                 "/api/v1/authentication/**",
-                "/api/v1/profiles/**", // Allow profiles endpoints for testing
+                "/api/v1/profiles/**",
                 "/v3/api-docs/**",
                 "/swagger-ui.html",
                 "/swagger-ui/**",

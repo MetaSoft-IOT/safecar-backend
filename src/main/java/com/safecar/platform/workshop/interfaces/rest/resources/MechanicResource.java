@@ -9,12 +9,16 @@ import java.util.Set;
  * context.
  * </p>
  * 
- * @param companyName       the name of the workshop company
+ * @param id                the mechanic ID
+ * @param profileId         the profile ID from Profiles BC
+ * @param workshopId        the workshop ID (null if not assigned yet)
  * @param specializations   set of specializations of the mechanic
  * @param yearsOfExperience years of professional experience
  */
 public record MechanicResource(
-        String companyName,
+        Long id,
+        Long profileId,
+        Long workshopId,
         Set<String> specializations,
         Integer yearsOfExperience) {
 

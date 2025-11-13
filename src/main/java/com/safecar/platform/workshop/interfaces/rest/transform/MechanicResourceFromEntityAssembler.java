@@ -22,8 +22,10 @@ public class MechanicResourceFromEntityAssembler {
                 .toStringSetFromSpecializationSet(entity.getSpecializations());
 
         return new MechanicResource(
-                entity.getCompanyName(),
-                specializationNames,
-                entity.getYearsOfExperience());
+            entity.getId(),
+            entity.getProfileId(),
+            entity.getWorkshopIdValue(),
+            specializationNames,
+            entity.getYearsOfExperience());
     }
 }

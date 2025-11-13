@@ -20,17 +20,11 @@ public record TelemetrySample(
         TelemetryTimestamp timestamp,
         
         @Embedded
-        @AttributeOverrides({
-            @AttributeOverride(name = "vehicleId", column = @Column(name = "sample_vehicle_id")),
-            @AttributeOverride(name = "plateNumber", column = @Column(name = "sample_plate_number"))
-        })
+        @AttributeOverride(name = "vehicleId", column = @Column(name = "sample_vehicle_id"))
         VehicleId vehicleId,
         
         @Embedded
-        @AttributeOverrides({
-            @AttributeOverride(name = "driverId", column = @Column(name = "sample_driver_id")),
-            @AttributeOverride(name = "fullName", column = @Column(name = "sample_driver_name"))
-        })
+        @AttributeOverride(name = "driverId", column = @Column(name = "sample_driver_id"))
         DriverId driverId,
         
         @Embedded

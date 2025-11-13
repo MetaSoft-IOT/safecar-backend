@@ -28,15 +28,6 @@ public record DriverId(
     }
 
     /**
-     * Validates that the driver ID is valid for business operations
-     * 
-     * @return true if valid, false otherwise
-     */
-    public boolean isValid() {
-        return driverId != null && driverId > 0;
-    }
-
-    /**
      * Creates a DriverId from a Long value with validation
      * 
      * @param id the driver ID
