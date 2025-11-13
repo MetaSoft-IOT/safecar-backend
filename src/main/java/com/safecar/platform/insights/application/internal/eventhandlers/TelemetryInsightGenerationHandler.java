@@ -29,9 +29,9 @@ public class TelemetryInsightGenerationHandler {
         var sample = event.sample();
         var vehicle = new VehicleReference(
                 sample.driverId().driverId(),
-                sample.driverId().fullName(),
+                resolveDriverFullName(sample.driverId()),
                 sample.vehicleId().vehicleId(),
-                sample.vehicleId().plateNumber()
+                resolveVehiclePlate(sample.vehicleId())
         );
         var payload = new TelemetrySensorPayload(
                 event.ingestedAt(),
@@ -93,5 +93,19 @@ public class TelemetryInsightGenerationHandler {
         map.put("rear_left", tp.rearLeft());
         map.put("rear_right", tp.rearRight());
         return map;
+    }
+
+    private String resolveDriverFullName(com.safecar.platform.workshop.domain.model.valueobjects.DriverId driverId) {
+        if (driverId == null || driverId.driverId() == null) {
+            return "Unknown driver";
+        }
+        return "Driver #" + driverId.driverId();
+    }
+
+    private String resolveVehiclePlate(com.safecar.platform.workshop.domain.model.valueobjects.VehicleId vehicleId) {
+        if (vehicleId == null || vehicleId.vehicleId() == null) {
+            return "UNKNOWN-VEHICLE";
+        }
+        return "VEH-" + vehicleId.vehicleId();
     }
 }
