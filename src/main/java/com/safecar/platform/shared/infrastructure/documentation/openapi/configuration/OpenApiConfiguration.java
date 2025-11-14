@@ -7,6 +7,7 @@ import io.swagger.v3.oas.models.info.Info;
 import io.swagger.v3.oas.models.info.License;
 import io.swagger.v3.oas.models.security.SecurityRequirement;
 import io.swagger.v3.oas.models.security.SecurityScheme;
+import io.swagger.v3.oas.models.servers.Server;
 
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.context.annotation.Bean;
@@ -37,6 +38,9 @@ public class OpenApiConfiguration {
   @Value("${documentation.application.version}")
   String applicationVersion;
 
+  @Value("${documentation.server.url}")
+  String serverUrl;
+
   /**
    * Creates the OpenAPI bean with the application information.
    * @return the OpenAPI bean configured with application details.
@@ -52,7 +56,8 @@ public class OpenApiConfiguration {
         .license(new License().name("Apache 2.0").url("https://springdoc.org")))
         .externalDocs(new ExternalDocumentation()
             .description("SafeCar Platform Documentation")
-            .url("https://safe-car.wiki.github.io/docs"));
+            .url("https://safe-car.wiki.github.io/docs"))
+        .addServersItem(new Server().url(serverUrl));
 
     String securitySchemeName = "bearerAuth";
         openApi.addSecurityItem(new SecurityRequirement()
